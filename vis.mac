@@ -1,0 +1,40 @@
+#EDITED by Neil
+# Macro file for the initialization phase of "Legend.cc"
+# when runing in interactive mode
+#
+# Sets some default verbose
+#
+/run/verbose 1 
+/control/verbose 1
+/exp/setShieldingStyle GERDA
+/exp/setFillGas ArgonLiquid
+/exp/update
+
+
+#
+# Create a scene handler/viewer for a specific graphics system
+#    The compound command "/vis/open <vis-driver-name>"
+#    is equivalent to the following set of commands:
+#
+#    /vis/sceneHandler/create
+#    /vis/viewer/create
+#
+# Create a scene handler and a viewer for the OGLIX driver
+/vis/open OGL 600x600-0+0
+#
+/vis/viewer/set/style wireframe
+/vis/viewer/set/auxiliaryEdge true
+/vis/viewer/set/lineSegmentsPerCircle 100
+#Set direction from target to camera.
+/vis/viewer/set/viewpointVector 1 1.5 1.1
+/vis/viewer/set/viewpointThetaPhi 80 9999999990 deg
+/vis/viewer/zoom 63.2736
+#    The compound command "/vis/drawVolume"
+#    is equivalent to the following set of commands:
+#
+#    /vis/scene/create
+#    /vis/scene/add/volume
+#    /vis/sceneHandler/attach
+# Create an empty scene and add the detector geometry to it
+/vis/drawVolume
+#

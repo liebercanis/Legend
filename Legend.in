@@ -1,0 +1,20 @@
+#**************
+#**
+#** Demonstrates the basic functionality of this example by running a
+#** a single event with the default configuration
+#**
+#**************
+/run/verbose 1
+#/control/verbose 1
+#/tracking/verbose 1
+#/Legend/detector/MainScintYield 100
+#/process/optical/verbose 1
+#/process/optical/processActivation Cerenkov false
+/run/initialize
+/Legend/saveThreshold 1000
+/Legend/pmtThreshold 2
+/Legend/eventVerbose 1
+/Legend/forceDrawPhotons true #/Legend/forceDrawNoPhotons false
+/run/beamOn 1
+/process/optical/scintillation/setTrackSecondariesFirst false
+/run/beamOn 1
