@@ -274,28 +274,43 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
    fTPB->SetMaterialPropertiesTable(tpbTable);
 
 
-  //********************* Wave Length Shifters (WLS) ******/
-  //In Lxe example, they create a class WLS. 
-  //This seems overly eloquent, this contruct 
-  //in the detector construction seems fine
-  G4double height_WLS = 0.05*m;
-  G4double startAngle_WLS = 0.*deg;
-  G4double spanningAngle_WLS = 360.*deg;
-  G4double innerR_WLS = 0.*m;
-  G4double outerR_WLS = innerR_cryo;
-  G4Tubs* solid_ScintSlab = new G4Tubs("Slab",innerR_WLS,outerR_WLS,height_WLS/2,startAngle_WLS,spanningAngle_WLS);
-  logical_ScintSlab = new G4LogicalVolume(solid_ScintSlab,G4Material::GetMaterial("Polystyrene"),"ScintSlab",0,0,0);
-  physical_ScintSlab = new G4PVPlacement(0,G4ThreeVector(0,0,innerR_cryo-height_WLS/2),
-                                         logical_ScintSlab,"phy_ScintSlab",logical_fillGas,false,0,checkOverlaps);
-   /**** WLS skin ****/
+   //********************* 
+   // Wave Length Shifters (WLS) ******/
+   // N.McFadden 
+   //**********************
+   G4double height_WLS = innerR_cryo;//0.05*m;
+   G4double startAngle_WLS = 0.*deg;
+   G4double spanningAngle_WLS = 360.*deg;
+   G4double innerR_WLS = innerR_cryo/2-1*cm;//-5*micrometer;;//innerR_cryo/2;//0.*m;
+   G4double outerR_WLS = innerR_cryo/2;//2 +delta*100
+   G4Tubs* fSolid_ScintSlab = new G4Tubs("Solid_wlsSlab",innerR_WLS,outerR_WLS,height_WLS,startAngle_WLS,spanningAngle_WLS);
 
-   // Define a rough optical surface to be used in the interface between WLS and LAr
-   // 50% roughness in the surface
-   // This surface will be attached between the WLS and the LAr in all instances
-   G4double roughness = 0.5;
-   fWLSoptSurf = new G4OpticalSurface("WLS_rough_surf",glisur,ground,dielectric_dielectric,roughness);
-   fWLSoptSurf->SetMaterialPropertiesTable(tpbTable);
-   fSkin_WLS = new G4LogicalSkinSurface("WLS_Surf",logical_ScintSlab,fWLSoptSurf);
+ 
+   logical_wls = new G4LogicalVolume(fSolid_ScintSlab,fTPB,"Logical_WLSCylinder");
+
+   physical_wls = new G4PVPlacement(0,G4ThreeVector(0,0,0), logical_wls,"phys_WLSCylinderPhysical",
+                                  logical_fillGas,false,0,checkOverlaps);
+
+   //********************* 
+   //N.McFadden 
+   //********************* 
+   //Considered rough from both sides
+   //Not sure if it should be fillGas or World, but I am guessing
+   //This describes the boundry between LAr and WLS, thus fillGas
+   //it the correct answer. But it crashes with bad physics when 
+   //it is fillGas...IDK
+   wls_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSCylinder_in_surf",physical_World /*physical_fillGas*/,physical_wls,fWLSoptSurf);
+   wls_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLSCylinder_out_surf",physical_wls,physical_World /*physical_fillGas*/,fWLSoptSurf);
+
+   G4Colour lblue (0.0, 0.0, 0.8 );
+   G4VisAttributes* fWLSVisAtt = new G4VisAttributes(lblue);
+   fWLSVisAtt -> SetVisibility(true);
+   fWLSVisAtt -> SetForceSolid(false);
+   logical_wls-> SetVisAttributes(fWLSVisAtt);
+   
+ 
+   
+   /**** WLS skin **** none for now */
 
   return physical_World;
 }

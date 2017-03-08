@@ -28,7 +28,12 @@
 /// \file optical/Legend/src/LegendEventAction.cc
 /// \brief Implementation of the LegendEventAction class
 //
-//
+/*  This method is invoked at the very end of event processing. It is typically used for a simple analysis of the processed event.
+**  If the user wants to keep the currently processing event until the end of the current run, the user can invoke 
+**  fpEventManager->KeepTheCurrentEvent(); so that it is kept in G4Run o bject. This should be quite useful if you simulate 
+**  quite many events and want to visualize only the most interest ones after the long execution. 
+**  Given the memory size of an event and its contents may be large, it is the user's responsibility not to keep unnecessary events. 
+*/
 #include "LegendAnalysis.hh"
 #include "LegendEventAction.hh"
 #include "LegendScintHit.hh"

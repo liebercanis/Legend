@@ -33,8 +33,9 @@
 
 #include "globals.hh"
 #include "G4UserSteppingAction.hh"
-
 #include "G4OpBoundaryProcess.hh"
+#include "TH1F.h"
+#include "TDirectory.h"
 
 class LegendRecorderBase;
 class LegendEventAction;
@@ -57,8 +58,9 @@ class LegendSteppingAction : public G4UserSteppingAction
     LegendRecorderBase* fRecorder;
     G4bool fOneStepPrimaries;
     LegendSteppingMessenger* fSteppingMessenger;
-
     G4OpBoundaryProcessStatus fExpectedNextStatus;
+    TH1F*  hBoundary;
+    TDirectory* fDir;
 };
 
 #endif

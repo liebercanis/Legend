@@ -46,9 +46,6 @@ class LegendEventAction : public G4UserEventAction
 
     LegendEventAction(LegendRecorderBase*);
     virtual ~LegendEventAction();
-
-  public:
-
     virtual void BeginOfEventAction(const G4Event*);
     virtual void EndOfEventAction(const G4Event*);
 

@@ -56,7 +56,7 @@ class LegendUserTrackInformation : public G4VUserTrackInformation
     virtual ~LegendUserTrackInformation();
 
     //Sets the track status to s (does not check validity of flags)
-    void SetTrackStatusFlags(int s){fStatus=s;}
+    void SetTrackStatusFlags(int sflag){fStatus=sflag;}
     //Does a smart add of track status flags (disabling old flags that conflict)
     //If s conflicts with itself it will not be detected
     void AddTrackStatusFlag(int s);

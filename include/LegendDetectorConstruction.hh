@@ -153,8 +153,9 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4LogicalVolume* logical_Rock;
     G4LogicalVolume* logical_DetGeCrystal;
     G4LogicalVolume* logical_innerVessel;
+    G4LogicalVolume* logical_wls;
 
-    //Physical Volume: Get Physical
+    //Physical Volume
     G4VPhysicalVolume* physical_Rock;
     G4VPhysicalVolume* physical_World;
     G4VPhysicalVolume* physical_innerVessel;
@@ -162,16 +163,22 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4VPhysicalVolume* physical_Photocath;
     G4VPhysicalVolume* physical_ScintSlab;
     G4VPhysicalVolume* physical_fillGas;
-    G4LogicalSkinSurface *  skin_copper;
-    G4LogicalSkinSurface *  skin_photocath;
+    G4LogicalSkinSurface*  skin_copper;
+    G4LogicalSkinSurface*  skin_photocath;
     G4LogicalSkinSurface* fSkin_WLS;
     G4OpticalSurface* fWLSoptSurf;
     G4OpticalSurface* fPMTGlassOptSurface;
+    G4PVPlacement *physical_wls;
+
+    // boarders
+    G4LogicalBorderSurface* wls_LogicalInnerSuface;
+    G4LogicalBorderSurface* wls_LogicalOuterSurface;
     
     //Sensitive Detectors
 		G4Cache<LegendScintSD*> Scint_SD;
-    G4Cache<LegendPMTSD*> Pmt_SD ;
+    G4Cache<LegendPMTSD*> Pmt_SD;
 
+   
 		//Main volume class object->idk what these are called :)
 		LegendDetectorConstruction * fMainVolume;
 

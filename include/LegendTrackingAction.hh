@@ -51,9 +51,10 @@ class LegendTrackingAction : public G4UserTrackingAction {
     virtual void PostUserTrackingAction(const G4Track*);
     TDirectory *fDir;
     TH1F *hTrackPhotonE;
- 
-  //TH1F *LAr_Spectrum = new TH1F("Scintillation from LAr"," counts vs photon energy in LAr",N,Nrg[0],Nrg[N-1]);
-
+    TH1F *hAbsorbedPhotonE;
+    TH1F *hWLSPhotonE;
+    TH1F *hPMTPhotonE;
+    TH1F* hTrackStatus;
   private:
   
  
