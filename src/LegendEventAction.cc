@@ -29,7 +29,6 @@
 /// \brief Implementation of the LegendEventAction class
 //
 //
-#include "LegendAnalysis.hh"
 #include "LegendEventAction.hh"
 #include "LegendScintHit.hh"
 #include "LegendPMTHit.hh"
@@ -67,8 +66,7 @@ LegendEventAction::~LegendEventAction(){}
 void LegendEventAction::BeginOfEventAction(const G4Event* anEvent){
  
   //New event, add the user information object
-  G4EventManager::
-    GetEventManager()->SetUserInformation(new LegendUserEventInformation);
+  G4EventManager::GetEventManager()->SetUserInformation(new LegendUserEventInformation);
   //SD is sensitive detector
   G4SDManager* SDman = G4SDManager::GetSDMpointer();
   if(fScintCollID<0){
@@ -76,7 +74,6 @@ void LegendEventAction::BeginOfEventAction(const G4Event* anEvent){
   }
   if(fPMTCollID<0)
     fPMTCollID=SDman->GetCollectionID("pmtHitCollection");
-
   if(fRecorder)fRecorder->RecordBeginOfEvent(anEvent);
 }
  
@@ -85,8 +82,6 @@ void LegendEventAction::BeginOfEventAction(const G4Event* anEvent){
 void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
 
   LegendUserEventInformation* eventInformation = (LegendUserEventInformation*)anEvent->GetUserInformation();
-  TTree *tree = LegendAnalysis::Instance()->getTree();
-  LTEvent* lEvent = (LTEvent*) LegendAnalysis::Instance()->getTree()->GetBranch("event");
  
   G4TrajectoryContainer* trajectoryContainer = anEvent->GetTrajectoryContainer();
  
@@ -107,7 +102,7 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
     }
   }
 
-  LegendScintHitsCollection* scintHC;// = 0;
+  LegendScintHitsCollection* scintHC = 0;
   LegendPMTHitsCollection* pmtHC = 0;
  // HC is hit count
   G4HCofThisEvent* hitsCE = anEvent->GetHCofThisEvent();
@@ -121,7 +116,7 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
   if(scintHC)
   {
     int n_hit = scintHC->entries();
-    G4cout<<n_hit<<" = Hits in Scintillator"<<G4endl;
+    //G4cout<<n_hit<<" = Hits in Scintillator"<<G4endl;
     G4ThreeVector  eWeightPos(0.);
     G4double edep;
     G4double edepMax=0;
@@ -138,10 +133,6 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
         eventInformation->SetPosMax(posMax,edep);
       }
     }
-    
-    lEvent->TotE=eventInformation->GetEDep();
-
-    G4cout<<" ********** TotE = "<< lEvent->TotE <<G4endl;
     if(eventInformation->GetEDep()==0.)
     {
       if(fVerbose>0)G4cout<<"\tNo hits in the scintillator this event."<<G4endl;
@@ -168,7 +159,7 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
   {
     G4ThreeVector reconPos(0.,0.,0.);
     G4int pmts=pmtHC->entries();
-    G4cout<<"pmt hit count = "<<pmts<<G4endl;
+    //G4cout<<"pmt hit count = "<<pmts<<G4endl;
     //Gather info from all PMTs
     for(G4int i=0;i<pmts;i++)
     {
@@ -195,8 +186,9 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
     }
     pmtHC->DrawAllHits();
   }
-
-  if(fVerbose>0)
+  
+  //!!(113467) = !(0) = 1
+  if(!!fVerbose)
   {
     //End of event output. later to be controlled by a verbose level
     G4cout << "\tNumber of photons that hit PMTs in this event : "
@@ -225,7 +217,6 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
     G4RunManager::GetRunManager()->rndmSaveThisEvent();
 
   if(fRecorder)fRecorder->RecordEndOfEvent(anEvent);
-  tree->Fill();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

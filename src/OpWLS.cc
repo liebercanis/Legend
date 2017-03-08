@@ -53,7 +53,6 @@
 
 
 #include "TMath.h"
-#include "TH1F.h"
 #include "OpWLS.hh"
 
 
@@ -79,11 +78,6 @@ OpWLS::OpWLS(const G4String& processName, G4ProcessType type)
 
   WLSTimeGeneratorProfile = 
        new G4WLSTimeGeneratorProfileDelta("WLSTimeGeneratorProfileDelta");
-
- // create directory 
-  fDir = LegendAnalysis::Instance()->topDir()->mkdir("OpWLS");
-  hOpWLSIntegral =NULL;
-    
 
   BuildThePhysicsTable();
 }
@@ -276,8 +270,6 @@ void OpWLS::BuildThePhysicsTable()
 {
   if (theIntegralTable) return;
   
-  fDir->cd();
-
   const G4MaterialTable* theMaterialTable = G4Material::GetMaterialTable();
   G4int numOfMaterials = G4Material::GetNumberOfMaterials();
   
@@ -286,7 +278,7 @@ void OpWLS::BuildThePhysicsTable()
   
   // loop for materials
   for (G4int i=0 ; i < numOfMaterials; i++) {
-      G4PhysicsOrderedFreeVector* aVec =new G4PhysicsOrderedFreeVector();
+      G4PhysicsOrderedFreeVector* aPhysicsOrderedFreeVector =new G4PhysicsOrderedFreeVector();
 
       // Retrieve vector of WLS wavelength intensity for
       // the material from the material's optical properties table.
@@ -296,36 +288,44 @@ void OpWLS::BuildThePhysicsTable()
         aMaterial->GetMaterialPropertiesTable();
 
       if (aMaterialPropertiesTable) {
-        G4MaterialPropertyVector* wVector = aMaterialPropertiesTable->GetProperty("WLSCOMPONENT");
-        if (wVector) {
-          // sum to get integral vector 
-          size_t wLength = wVector->GetVectorLength();
-          //G4cout << " *************** WLSOMPONENT vector ********** entries= "  << wLength << G4endl;
-          G4double vsum=0;
-          for(size_t iv =0; iv< wLength ; ++iv) {
-            G4double eiv = wVector->Energy(iv);
-            G4double viv =  wVector->Value(eiv);
-            vsum += viv;
-            //G4cout << " e= " << eiv  << " value = "  << " integral " << vsum <<  G4endl;
-            aVec->InsertValues(eiv,vsum);
+
+        G4MaterialPropertyVector* theWLSVector = aMaterialPropertiesTable->GetProperty("WLSCOMPONENT");
+
+        if (theWLSVector) {
+          // Retrieve the first intensity point in vector of (photon energy, intensity) pairs
+          G4double currentIN = (*theWLSVector)[0];
+          if (currentIN >= 0.0) {
+            // Create first (photon energy)
+            G4double currentPM = theWLSVector->Energy(0);
+            G4double currentCII = 0.0;
+            aPhysicsOrderedFreeVector->InsertValues(currentPM , currentCII);
+	    
+            // Set previous values to current ones prior to loop
+	    
+            G4double prevPM  = currentPM;
+            G4double prevCII = currentCII;
+            G4double prevIN  = currentIN;
+	    
+            // loop over all (photon energy, intensity)
+            // pairs stored for this material
+
+            for (size_t is = 1;  is < theWLSVector->GetVectorLength(); is++) {  
+              currentPM = theWLSVector->Energy(is);
+              currentIN = (*theWLSVector)[is];
+              currentCII = 0.5 * (prevIN + currentIN);
+              currentCII = prevCII + (currentPM - prevPM) * currentCII;
+              aPhysicsOrderedFreeVector->InsertValues(currentPM, currentCII);
+              prevPM  = currentPM;
+              prevCII = currentCII;
+              prevIN  = currentIN;
+            }
           }
         }
       }
-      // plot the integral table
-      size_t aLength = aVec->GetVectorLength();
-      if(aLength>0&&!hOpWLSIntegral) {
-        hOpWLSIntegral  = new TH1F("OpWLSIntegral"," WLS integral",aLength,aVec->Energy(0),aVec->Energy(aLength-1));
-        for(size_t iv =0; iv < aLength  ; ++iv) {
-          G4double eiv = aVec->Energy(iv);
-          hOpWLSIntegral->SetBinContent(iv,aVec->Value(eiv));
-        }
-        hOpWLSIntegral->Print();
-      }
-
       // The WLS integral for a given material
       // will be inserted in the table according to the
       // position of the material in the material table.
-      theIntegralTable->insertAt(i,aVec);
+      theIntegralTable->insertAt(i,aPhysicsOrderedFreeVector);
   }
 }
 

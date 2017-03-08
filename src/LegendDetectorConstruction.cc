@@ -28,6 +28,7 @@
 
 #include "math.h"
 
+#include "G4NistManager.hh"
 #include "G4VisAttributes.hh"
 #include "G4Color.hh"
 #include "G4Colour.hh"
@@ -54,7 +55,9 @@ LegendDetectorConstruction::LegendDetectorConstruction()
 	innerVessel_FillMaterial = "ArgonLiquid";//"NitrogenGas";
 	checkOverlaps = true;//false;
 
-    
+  //***//
+  //TPB//
+  //***//    
   G4String pathFile = "External_data/tpbGhemann.root";
   TFile *tpbFile = new TFile(pathFile.data());
   if (!tpbFile ) 
@@ -67,18 +70,35 @@ LegendDetectorConstruction::LegendDetectorConstruction()
     G4cout<<" LegendDetectorConstruction ERROR:: not graph tpbBhemann in file " << pathFile <<G4endl;
   else 
     G4cout<<" LegendDetectorConstruction info tpbBhemann graph found " <<G4endl;
+  //******//
+  //VM2000
+  //******//
+  pathFile = "External_data/VM2000.root";
+  TFile *VM2000File = new TFile(pathFile.data());
+  if (!VM2000File ) 
+    G4cout<<" LegendDetectorConstruction ERROR:: file " << pathFile << " not found " << G4endl;
+  else
+    G4cout<<" LegendDetectorConstruction INFO:: file " << pathFile << " opened " << G4endl;
+  fVM2000spec=NULL;
+  VM2000File->GetObject("VM2000_EmissionProfile",fVM2000spec);
+  if (!fVM2000spec ) 
+    G4cout<<" LegendDetectorConstruction ERROR:: not graph VM2000 in file " << pathFile <<G4endl;
+  else 
+    G4cout<<" LegendDetectorConstruction info VM2000 graph found " <<G4endl;
+
 
    G4cout<<" LegendDetectorConstruction constant LambdaE =" << LambdaE << G4endl;
   
   // create directory 
-  fDir = LegendAnalysis::Instance()->topDir()->mkdir("DetCon");
+  fDir = LegendAnalysis::Instance()->topDir()->mkdir("detec");
   fDir->cd();
   G4cout<<" LegendDetectorAction working root directory  is  " << G4endl;  
   gDirectory->pwd();
   G4cout << " ... " << G4endl;
   G4double LowE =1.4*eV;//885.6013 2.4796*eV;//500 nm
   G4double HighE = 12.3984*eV;//100 nm
-  hDetecWLSPhotonE = new TH1F("DetConWLSPhotonE"," photon energy in WLS",1000,LowE,HighE);
+  hDetecWLSPhotonE = new TH1F("DetecWLSPhotonE"," photon energy in WLS",1000,LowE,HighE);
+  hDetecWLSPhotonWavelength = new TH1F("DetecWLSPhotonWavelength"," photon Wavelength in WLS",1000,LambdaE/HighE,LambdaE/LowE);
 
 
 }
@@ -94,7 +114,7 @@ LegendDetectorConstruction::~LegendDetectorConstruction()
 
 G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 {
-
+  //Most materials are defined here, things like Argon and TPB are defined below
 	#include "LegendDetectorMaterials.icc"
   ArgonOpticalProperties();
 //	#include "LegendScintillationDefinitions.icc"
@@ -102,6 +122,7 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 	//
   // World
   //
+  ////////////////////////////////////////////////////////////////////////////////////////
   solid_World = new G4Box("sol_World",50*m,50*m,30*m);
   logical_World = new G4LogicalVolume(solid_World,mat_air,"log_World");
 	logical_World->SetVisAttributes (G4VisAttributes::Invisible);
@@ -132,23 +153,26 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 	G4double innerVessel_RMax[6] = {1*m,1*m,1*m,1*m,1*m,1*m};
 
 	solid_innerVessel = new G4Polycone("sol_innerVessel", 0, 2*M_PI,6,innerVessel_Z,innerVessel_RMin,innerVessel_RMax);
-	logical_innerVessel = new G4LogicalVolume(solid_innerVessel, mat_Cu, "log_innerVessel" );
+	logical_innerVessel = new G4LogicalVolume(solid_innerVessel,G4Material::GetMaterial("MetalCopper"), "log_innerVessel" );
 	logical_innerVessel->SetVisAttributes ( new G4VisAttributes(G4Colour(0.62, 0.3, 0.2,0.7) ));
 	physical_innerVessel = new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_innerVessel,"phy_innerVessel",logical_World,false,0,checkOverlaps);
   
+  
   //Inner Vessel Optical properties
   //
+  //not sure we need Optical Properties if
+  //The inside is coats with VM2000 !!!! (it's over 2000)
   static const G4int NUMENTRIES_LAr = 69;
   G4double refl = .96;
   G4double effncy = 0.;
-
   G4double ee;
   G4double LAr_Energy[NUMENTRIES_LAr];
   G4double LArHighE = LambdaE / (115*nanometer);
   G4double LArLowE = LambdaE / (650*nanometer); 
   G4double de = ((LArHighE - LArLowE) / ((G4double)(NUMENTRIES_LAr-1)));
-  G4double reflectivity_skin[NUMENTRIES_LAr];// = {refl,refl,refl,refl,refl,refl,refl};
-  G4double efficiency_skin[NUMENTRIES_LAr];// = {effncy, effncy, effncy, effncy, effncy, effncy, effncy};
+  G4double reflectivity_skin[NUMENTRIES_LAr];
+  G4double efficiency_skin[NUMENTRIES_LAr];
+  
   
   for (int ji = 0; ji < NUMENTRIES_LAr; ji++)
   {
@@ -167,13 +191,15 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   cryoHousingSurface->SetMaterialPropertiesTable(cryoHousing);
 
   skin_copper = new G4LogicalSkinSurface("CU_Cyro_Surf",logical_copperShield, cryoHousingSurface);
+  
+
   //fill gas
   solid_fillGas = new G4Tubs("sol_fillGas", 0, innerR_cryo ,innerR_cryo, 0, 2*M_PI);
   logical_fillGas = new G4LogicalVolume(solid_fillGas, mat_fillGas, "log_fillGas" );
   logical_fillGas->SetVisAttributes ( new G4VisAttributes(G4Colour(0.7,0.1,0.1,0.5) ) );//0.5, 0.5, 0.5, 0.5) )); //grey 50% transparent
   physical_fillGas = new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_fillGas,"phy_fillGas",logical_World,false,0,checkOverlaps);
 
-  #include "Detector_MJDStyle.icc"
+  //#include "Detector_MJDStyle.icc"
 
   //Pmts  
   G4double innerR_pmt = 0.*cm;
@@ -189,7 +215,7 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   logical_Photocath = new G4LogicalVolume(solid_Photocath,G4Material::GetMaterial("Al"),"logical_Photocath_log");
  
   physical_Photocath = new G4PVPlacement(0,G4ThreeVector(0,0,-height_pmt/2),logical_Photocath,"photocath",logical_Pmt,false,0,checkOverlaps);
-  physical_PMT = new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+height_pmt),logical_Pmt,"phys_Pmt",logical_fillGas,false,0,checkOverlaps);
+//  physical_PMT = new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+height_pmt),logical_Pmt,"phys_Pmt",logical_World,false,0,checkOverlaps);
 
   logical_Pmt->SetVisAttributes ( new G4VisAttributes(G4Colour(0.6,0.1,0.7) ) );
  
@@ -197,9 +223,9 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   new G4LogicalSkinSurface("PMTGlass_surf",logical_Pmt,fPMTGlassOptSurface);
  
   //Photocathode surface
-  G4double photocath_EFF[NUMENTRIES_LAr];//={1.,1.,1.,1.,1.,1.,1.}; //Enables 'detection' of photons
-  G4double photocath_ReR[NUMENTRIES_LAr];//={1.92,1.92,1.92,1.92,1.92,1.92,1.92};
-  G4double photocath_ImR[NUMENTRIES_LAr];//={1.69,1.69,1.69,1.69,1.69,1.69,1.69};
+  G4double photocath_EFF[NUMENTRIES_LAr];
+  G4double photocath_ReR[NUMENTRIES_LAr];
+  G4double photocath_ImR[NUMENTRIES_LAr];
    for (int ij = 0; ij < NUMENTRIES_LAr; ij++){
      photocath_EFF[ij] = 1.;//Enables 'detection' of photons
      photocath_ReR[ij] = 1.92;
@@ -215,11 +241,55 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   
   photocath_opsurf->SetMaterialPropertiesTable(photocath_mt);
   skin_photocath = new G4LogicalSkinSurface("photocath_surf",logical_Photocath,photocath_opsurf);
+
+  //VM2000 reflector foil inside the copper cryo
+  //Reflector (VM2000)
+  //From Dario's thesis, reflectivity of VM2000 is ~98% above 370 nm
+  //and ~15% below it (almost a step-function)
+  //Read this paper, It seems Neil does not understand
+  //exactly what GERDA is doing with the TPB and VM2000
+  //https://arxiv.org/pdf/1503.05349.pdf
+  //From their code and comments, it seems they are usings
+  //specs for a TPB VM2000 mix and attributing those
+  //specs to the TPB itself, while the VM2000 is only
+  //a reflector...IDK
+  G4double VM2000_thickness = 1*mm;
+  G4double VM2000_outerR = innerR_cryo/2+VM2000_thickness;
+  G4double VM2000_innerR = innerR_cryo/2;
+  G4double VM2000_height = innerR_cryo;
+  G4VSolid* fVM2000CylinderSolid = new G4Tubs("solid_VM2000Cylinder",VM2000_innerR,VM2000_outerR,VM2000_height,0,2*M_PI);
+  
+  G4Material*fMaterialVM2000 = G4Material::GetMaterial("VM2000");
+
+  logical_VM2000Cylinder = new G4LogicalVolume(fVM2000CylinderSolid,fMaterialVM2000,"logical_VM2000Cylinder");
+
+  new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_VM2000Cylinder,"phys_VM2000Cylinder",logical_World,false,0);
+
+  G4double Reflectivity[NUMENTRIES_LAr];
+  //G4double Efficiency[num];
+
+  for (int ji=0;ji < NUMENTRIES_LAr; ji++)
+  {
+    if (LAr_Energy[ji] < (LambdaE/(370*nanometer)))
+      Reflectivity[ji] = 0.98; //visible
+    else
+      Reflectivity[ji] = 0.15; //UV
+  }
+  G4MaterialPropertiesTable *vmOpTable = new G4MaterialPropertiesTable();
+  vmOpTable->AddProperty("REFLECTIVITY",LAr_Energy,Reflectivity,NUMENTRIES_LAr);
+
+  G4OpticalSurface* reflOptSurface = new G4OpticalSurface("VM_surface");
+
+  new G4LogicalSkinSurface("VM_surface",logical_VM2000Cylinder,reflOptSurface);
+  // Visualization
+  G4VisAttributes* fVM2000VisAtt = new G4VisAttributes(G4Color(0,204./255.,204./255.));
+  fVM2000VisAtt -> SetVisibility(true);
+  fVM2000VisAtt -> SetForceSolid(false);
+  logical_VM2000Cylinder-> SetVisAttributes(fVM2000VisAtt);
+
   // add WLS 
   // -- WLS: TPB (Tetraphenyl butadiene)
-  // --M.Gold from Gehmann et al NIM A654 (2011) 116
-  // function in header TPBEmissionSpectrum uses graph fTPBSpec
-  //
+  // --M.Gold from Gehmann et al plot
 
    fTPB = G4Material::GetMaterial("TPB", false);
    if (fTPB == 0) {
@@ -235,35 +305,34 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
    // Build table with photon energies
    
    const G4int numTPB =500;// 63;;
-   G4double PPSCHighETPB = LambdaE /(350*nanometer);
+   G4double PPSCHighETPB = LambdaE /(115*nanometer);
    G4double PPSCLowETPB = LambdaE /(650*nanometer);//(650*nanometer); //598
    G4double deeTPB = ((PPSCHighETPB - PPSCLowETPB) / ((G4double)(numTPB-1)));
    G4double LAr_SCPPTPB[numTPB];
    for (G4int ji = 0; ji < numTPB; ji++)  LAr_SCPPTPB[ji]=PPSCLowETPB+ ((G4double)ji) * deeTPB;
-   //outFile->cd();
- //G4cout<< PPSCHighETPB <<" = PPSCHighETPB"<<PPSCLowETPB<<" PPSCLowETPB"<<G4endl;
    G4double WLS_absorption[numTPB];
    G4double WLS_emission[numTPB];
    G4double Refraction[numTPB];
    tpbTable = new G4MaterialPropertiesTable();
-  //cheesy way to include tables from https://arxiv.org/abs/1104.3259
-  //#include "fLAr_SCPPTPB.icc"
-  //#include "fTPBspec.icc"
   for (G4int ji=0;ji < numTPB; ji++) {
-    //convert to nm to eV
-    //LAr_SCPPTPB[ji] = LambdaE/LAr_SCPPTPB[ji];
-    Refraction[ji] = 1.6; //this is just a guess
+     Refraction[ji] = 1.6; //this is just a guess
      // Should the TPB shift the Cherenkov light?
      // This makes a tail starting at 128 until the visible.
-     if (LAr_SCPPTPB[ji] > 3.31*eV)
+     if (LAr_SCPPTPB[ji] > 3.31*eV){// < 374.57 nm 
        // For the moment set it to always absorb photons
        WLS_absorption[ji] = 0.001*nm; //absorbs UV (always)
-     else
+     } 
+     else{
+       // < 350 nm
        WLS_absorption[ji] = 10.5*m; //otherwise transparent
-       WLS_emission[ji] = TPBEmissionSpectrum(LAr_SCPPTPB[ji]);//fTPBspec[ji];
+     }
+       WLS_emission[ji] = TPBEmissionSpectrum(LAr_SCPPTPB[ji]);
        hDetecWLSPhotonE->SetBinContent(ji,WLS_emission[ji]);
-       //G4cout<<" WLS emission "<<LAr_SCPPTPB[ji]<<", "<<WLS_emission[ji]<<G4endl;
+       hDetecWLSPhotonWavelength->SetBinContent(numTPB-1-ji,WLS_emission[ji]);
+       //G4cout<<" WLS Emmsion "<<WLS_emission[ji]<<" LAr Energy "<<LAr_SCPPTPB[ji]<<G4endl;
+       //G4cout<<" WLS Absorption Length "<<WLS_absorption[ji]<<" LAr Energy "<<LAr_SCPPTPB[ji]<<G4endl;
    }
+
    tpbTable->AddProperty("RINDEX",LAr_SCPPTPB,Refraction,numTPB);
    tpbTable->AddProperty("WLSABSLENGTH",LAr_SCPPTPB,WLS_absorption,numTPB);
    tpbTable->AddProperty("WLSCOMPONENT",LAr_SCPPTPB,WLS_emission,numTPB);
@@ -272,32 +341,47 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
    G4double WLSyield = 1.2;
    tpbTable->AddConstProperty("WLSMEANNUMBERPHOTONS",WLSyield);
    fTPB->SetMaterialPropertiesTable(tpbTable);
-
-
-  //********************* Wave Length Shifters (WLS) ******/
-  //In Lxe example, they create a class WLS. 
-  //This seems overly eloquent, this contruct 
-  //in the detector construction seems fine
-  G4double height_WLS = 0.05*m;
-  G4double startAngle_WLS = 0.*deg;
-  G4double spanningAngle_WLS = 360.*deg;
-  G4double innerR_WLS = 0.*m;
-  G4double outerR_WLS = innerR_cryo;
-  G4Tubs* solid_ScintSlab = new G4Tubs("Slab",innerR_WLS,outerR_WLS,height_WLS/2,startAngle_WLS,spanningAngle_WLS);
-  logical_ScintSlab = new G4LogicalVolume(solid_ScintSlab,G4Material::GetMaterial("Polystyrene"),"ScintSlab",0,0,0);
-  physical_ScintSlab = new G4PVPlacement(0,G4ThreeVector(0,0,innerR_cryo-height_WLS/2),
-                                         logical_ScintSlab,"phy_ScintSlab",logical_fillGas,false,0,checkOverlaps);
-   /**** WLS skin ****/
-
+   
    // Define a rough optical surface to be used in the interface between WLS and LAr
    // 50% roughness in the surface
    // This surface will be attached between the WLS and the LAr in all instances
+   // STILL TRYING TO DEBUG
    G4double roughness = 0.5;
    fWLSoptSurf = new G4OpticalSurface("WLS_rough_surf",glisur,ground,dielectric_dielectric,roughness);
-   fWLSoptSurf->SetMaterialPropertiesTable(tpbTable);
-   fSkin_WLS = new G4LogicalSkinSurface("WLS_Surf",logical_ScintSlab,fWLSoptSurf);
 
-  return physical_World;
+   G4double height_WLS = innerR_cryo;//0.05*m;
+   G4double startAngle_WLS = 0.*deg;
+   G4double spanningAngle_WLS = 360.*deg;
+   G4double innerR_WLS = innerR_cryo/2-1*cm;//-5*micrometer;;//innerR_cryo/2;//0.*m;
+   G4double outerR_WLS = innerR_cryo/2;//2 +delta*100
+   G4Tubs* fSolid_ScintSlab = new G4Tubs("Solid_wlsSlab",innerR_WLS,outerR_WLS,height_WLS,startAngle_WLS,spanningAngle_WLS);
+   
+   logical_wls = new G4LogicalVolume(fSolid_ScintSlab,fTPB,"Logical_WLSCylinder");
+
+   physical_wls = new G4PVPlacement(0,
+                                  //G4ThreeVector(fDetCenter.x(),fDetCenter.y(),fDetCenter.z() + fShroud_Offset),
+                                  G4ThreeVector(0,0,0),
+                                  logical_wls,
+                                  "phys_WLSCylinderPhysical",
+                                  logical_fillGas,//logical_World,//logical_fillGas,
+                                  false,
+                                  0,checkOverlaps);
+
+ //Considered rough from both sides
+ //Not sure if it should be fillGas or World, but I am guessing
+ //This describes the boundry between LAr and WLS, thus fillGas
+ //it the correct answer. But it crashes with bad physics when 
+ //it is fillGas...IDK
+ wls_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSCylinder_in_surf",physical_World /*physical_fillGas*/,physical_wls,fWLSoptSurf);
+ wls_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLSCylinder_out_surf",physical_wls,physical_World /*physical_fillGas*/,fWLSoptSurf);
+
+   G4Colour lblue (0.0, 0.0, 0.8 );
+   G4VisAttributes* fWLSVisAtt = new G4VisAttributes(lblue);
+   fWLSVisAtt -> SetVisibility(true);
+   fWLSVisAtt -> SetForceSolid(false);
+   logical_wls-> SetVisAttributes(fWLSVisAtt);
+   
+   return physical_World;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -347,7 +431,6 @@ void LegendDetectorConstruction::ArgonOpticalProperties()
   G4double PPCKOVHighE = LambdaE / (115*nanometer);
   G4double PPCKOVLowE = LambdaE / (650*nanometer); 
   G4double de = ((PPCKOVHighE - PPCKOVLowE) / ((G4double)(NUMENTRIES-1)));
-  G4double LArAbsLength = 3*m; //just a number. ICARUS says it is negligible over
   // liquid argon (LAr)  
   G4double LAr_PPCK[(NUMENTRIES)];
   G4double LAr_RIND[(NUMENTRIES)];
@@ -363,7 +446,6 @@ void LegendDetectorConstruction::ArgonOpticalProperties()
       LAr_PPCK[ji] = e;
       LAr_RIND[ji] = LArRefIndex((LambdaE / e));
       LAr_RAYL[ji] = LArRayLength((LambdaE / e), temp);
-      //LAr_ABSL[ji] = LArAbsLength;
       
       if (((LambdaE / e)/nm) < 200.0) {
 	    	  LAr_ABSL[ji] = lar_absl_xuv;
@@ -373,7 +455,7 @@ void LegendDetectorConstruction::ArgonOpticalProperties()
     }
 
   G4double PPSCHighE = LambdaE /(115*nanometer);
-  G4double PPSCLowE = LambdaE /(136*nanometer);
+  G4double PPSCLowE = LambdaE /(650*nanometer);
   G4double dee = ((PPSCHighE - PPSCLowE) / ((G4double)(num-1)));
   G4double LAr_SCIN[num];
   G4double LAr_SCPP[num];
@@ -429,7 +511,8 @@ G4double LegendDetectorConstruction::LArEpsilon(const G4double lambda)
 
 G4double LegendDetectorConstruction::LArRefIndex(const G4double lambda)
 {
-  return ( sqrt(LArEpsilon(lambda)) ); // square root of dielectric constant
+// G4cout<< ( sqrt(LArEpsilon(lambda)))<<G4endl;
+ return ( sqrt(LArEpsilon(lambda)) ); // square root of dielectric constant
 }
 G4double LegendDetectorConstruction::LArRayLength(const G4double lambda,const
 				   G4double temp)

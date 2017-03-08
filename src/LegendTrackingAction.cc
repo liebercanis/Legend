@@ -46,16 +46,19 @@
 
 LegendTrackingAction::LegendTrackingAction(LegendRecorderBase* r)
   : fRecorder(r) {
-  
+   
   // create directory 
   fDir = LegendAnalysis::Instance()->topDir()->mkdir("track");
   fDir->cd();
   G4cout<<" LegendTrackingAction working root directory  is  " << G4endl;  
   gDirectory->pwd();
   G4cout << " ... " << G4endl;
-  G4double LowE = 2.4796*eV;//500 nm
+  G4double LowE =1.4*eV;//885.6013 2.4796*eV;//500 nm
   G4double HighE = 12.3984*eV;//100 nm
   hTrackPhotonE = new TH1F("TrackPhotonE"," photon energy in LAr",1000,LowE,HighE);
+  hTrackPhotonWavelength = new TH1F("TrackPhotonWavelength"," photon wavelength in LAr",1000,LambdaE/LowE,LambdaE/HighE);
+  hTrackWLSPhotonE = new TH1F("TrackWLSPhotonEnergy","WLS photon energy",1000,LowE,HighE);
+  hTrackWLSPhotonWavelength = new TH1F("TrackWLSPhotonWaveLength","WLS photon energy",1000,LambdaE/LowE,LambdaE/HighE);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -111,17 +114,27 @@ void LegendTrackingAction::PostUserTrackingAction(const G4Track* aTrack){
   const G4VProcess* creator=aTrack->GetCreatorProcess();
   
   if(aTrack->GetDefinition() ==G4OpticalPhoton::OpticalPhotonDefinition()){
-    if(creator && creator->GetProcessName()!= "Scintillation") 
-      G4cout<<"LegendTrackingAction.cc:: "<<"Optical Photon Creation Process that is not Scintillation is:: "<<creator->GetProcessName()<<G4endl;
+    if(creator && creator->GetProcessName()!= "Scintillation"){ 
+     //G4cout<<"LegendTrackingAction.cc:: "<<"Optical Photon Creation Process that is not Scintillation is:: "<<creator->GetProcessName()<<G4endl;
+    }
+    G4double KE = aTrack->GetTotalEnergy();//Returns energy in MeV
     if(creator && creator->GetProcessName() ==  "Scintillation"){
-      G4double KE = aTrack->GetTotalEnergy();//Returns energy in MeV
-      //G4double KE = aTrack->GetKineticEnergy();//Returns energy in MeV
-      //LAr_Spectrum->Fill(KE);
       if(trackInformation->GetTrackStatus()&absorbed){
         hTrackPhotonE->Fill(KE);
-		    trajectory->SetDrawTrajectory(true);
+        hTrackPhotonWavelength->Fill(LambdaE/KE);
+        if(KE<12.3984*eV && KE>6.1992*eV) {//200 nm >lambda > 100 nm
+//  		    trajectory->SetDrawTrajectory(true);
+        }
       }
     }
+    else if(creator && creator->GetProcessName() == "OpWLS"){
+      hTrackWLSPhotonE->Fill(KE);
+      hTrackWLSPhotonWavelength->Fill(LambdaE/KE);
+      if(KE<3.5424*eV && KE>1.9074*eV) {//650 nm>lambda > 350 nm
+        trajectory->SetDrawTrajectory(true);
+      }
+    }
+
 	}
   if(fRecorder)fRecorder->RecordTrack(aTrack);
 }

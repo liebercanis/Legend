@@ -20,22 +20,13 @@ void LegendAnalysis::Initialize()
   time(&tnow);
   char chtime[80];
   sprintf(chtime,"%u",unsigned(tnow));
-  G4String fFileName = G4String("legend-") + G4String(chtime) + G4String(".root");
+  G4String fFileName = G4String("RooTFiles/legend-") + G4String(chtime) + G4String(".root");
   fFile=new TFile(fFileName.data(),"RECREATE");
   G4String gmess= G4String(" ************  output file is ") + fFileName +  G4String(" ************ ");
   G4cout << gmess << G4endl;
   G4cout<<" LegendAnalysis working root directory  is  " << G4endl;  
   topDir()->cd();
-
-  // make tree in output file
-  fTree = new TTree("LTree","LTree");
-  fEvent = new LTEvent();
-  fTree->Branch("event",&fEvent);
-
-  G4cout << " root top directory " << G4endl;
   gDirectory->pwd();
-  topDir()->ls();
   G4cout << " ... " << G4endl;
-
 }
 

@@ -64,7 +64,7 @@
 #include "G4ParticleWithCuts.hh"
 #include "G4ParticleTypes.hh"
 #include "G4ParticleTable.hh"
-
+#include "G4Proton.hh" //IDK if this works but we need a proton header for ConstructOp
 #include "G4ios.hh"
 #include "G4UserLimits.hh"
 
@@ -183,7 +183,7 @@ void LegendPhysicsList::ConstructProcess()
   
   ConstructCerenkov();
 
-  ConstructHad();
+  //ConstructHad();
 
   ConstructGeneral();
 
@@ -427,15 +427,14 @@ void LegendPhysicsList::ConstructEM() {
     
   }
 }
-
-
 // Optical Processes ////////////////////////////////////////////////////////
 #include "G4Scintillation.hh"
 #include "G4OpAbsorption.hh"
 #include "G4OpRayleigh.hh"
 #include "G4OpBoundaryProcess.hh"
 #include "G4Cerenkov.hh"
-#include "OpWLS.hh"
+#include "OpWLS.hh" //From RAT
+#include "WlsScintillation.hh"//From RAT
 
 void LegendPhysicsList::ConstructOp() 
 {
@@ -465,21 +464,46 @@ void LegendPhysicsList::ConstructOp()
 
   // optical processes
   G4OpAbsorption* theAbsorptionProcess = new G4OpAbsorption();
-  G4OpRayleigh* theRayleighScatteringProcess = new G4OpRayleigh();
+  //  G4OpRayleigh is not used for the following two reasons:
+  //    1) It doesn't even try to work for anything other than water.
+  //    2) It doesn't actually work for water, either.
+  //    --RAT
   G4OpBoundaryProcess* theBoundaryProcess = new G4OpBoundaryProcess();
   OpWLS* theWLSProcess = new OpWLS();
-  /*
-  if(theWLSProcess) {
-    G4cout << "   here is the WLS physics table " << G4endl;
-    theWLSProcess->DumpPhysicsTable();
-  }
-    theAbsorptionProcess->DumpPhysicsTable();
-    theRayleighScatteringProcess->DumpPhysicsTable();
-  */
+  theWLSProcess->UseTimeProfile("delta");
+  
   theAbsorptionProcess->SetVerboseLevel(OpVerbLevel);
-  theRayleighScatteringProcess->SetVerboseLevel(OpVerbLevel);
   theBoundaryProcess->SetVerboseLevel(OpVerbLevel);
   theWLSProcess->SetVerboseLevel(OpVerbLevel);
+
+  G4Scintillation* theG4scintAlphaInTpbScintProcess = new G4Scintillation("AlphaInTpbScintillation");  
+  theG4scintAlphaInTpbScintProcess->SetTrackSecondariesFirst(true);
+  theG4scintAlphaInTpbScintProcess->SetScintillationYieldFactor(1.0);
+  theG4scintAlphaInTpbScintProcess->SetScintillationExcitationRatio(0.67);;
+
+  WlsScintillation* theAlphaInTpbScintProcess =  new WlsScintillation("AlphaInTpbScintillation");  
+  theAlphaInTpbScintProcess->SetTrackSecondariesFirst(false);
+  theAlphaInTpbScintProcess->SetScintillationYieldFactor(1.0);
+  theAlphaInTpbScintProcess->SetScintillationExcitationRatio(0.33);
+
+  WlsScintillation* theElectronInTpbScintProcess = new WlsScintillation("ElectronInTpbScintillation");
+  theElectronInTpbScintProcess->SetTrackSecondariesFirst(false);
+  // IEEE TRANSACTIONS ON NUCLEAR SCIENCE, VOL. 56, NO. 3, JUNE 2009, normalized to alphas from Tina'a paper 
+  theElectronInTpbScintProcess->SetScintillationYieldFactor(4.44); 
+  theElectronInTpbScintProcess->SetScintillationExcitationRatio(0.926);;
+
+  WlsScintillation* theProtonInTpbScintProcess = new WlsScintillation("ProtonInTpbScintillation");
+  theProtonInTpbScintProcess->SetTrackSecondariesFirst(false);
+  theProtonInTpbScintProcess->SetScintillationYieldFactor(1.); // assumed same as for alphas
+  theProtonInTpbScintProcess->SetScintillationExcitationRatio(0.33); // assumed same as for alphas;
+
+  WlsScintillation* theIonInTpbScintProcess = new WlsScintillation("IonInTpbScintillation");
+  theIonInTpbScintProcess->SetTrackSecondariesFirst(false);
+  theIonInTpbScintProcess->SetScintillationYieldFactor(0.25/0.81); // a guess, FIXME?
+  theIonInTpbScintProcess->SetScintillationExcitationRatio(0.2); // IEEE TRANSACTIONS ON NUCLEAR SCIENCE, VOL. 56, NO. 3, JUNE 2009
+
+
+
 
   auto particleIterator=GetParticleIterator();
   particleIterator->reset();
@@ -508,21 +532,54 @@ void LegendPhysicsList::ConstructOp()
 	        pmanager->SetProcessOrderingToLast(theScintProcessDef,idxPostStep);
 	      }	  
       }
-      
+      if (theG4scintAlphaInTpbScintProcess && particleName == "alpha"){
+      	printf("Defined alpha scintillation in TPB using G4Scintillation\n");
+	      pmanager->AddProcess(theG4scintAlphaInTpbScintProcess);
+      	pmanager->SetProcessOrderingToLast(theG4scintAlphaInTpbScintProcess, idxAtRest);
+      	pmanager->SetProcessOrderingToLast(theG4scintAlphaInTpbScintProcess, idxPostStep);
+    }
+    if (theAlphaInTpbScintProcess && particleName == "alpha")
+      if (theAlphaInTpbScintProcess->IsApplicable(*particle)) {
+      	printf("Defined alpha scintillation in TPB using WlsScintillation\n");
+	      pmanager->AddProcess(theAlphaInTpbScintProcess);
+	      pmanager->SetProcessOrderingToLast(theAlphaInTpbScintProcess, idxAtRest);
+	      pmanager->SetProcessOrderingToLast(theAlphaInTpbScintProcess, idxPostStep);
+      }
+    if (theElectronInTpbScintProcess && particleName == "e-")
+      if(theElectronInTpbScintProcess->IsApplicable(*particle)) {
+	      printf("Defined e- scintillation in TPB using WlsScintillation\n");
+      	pmanager->AddProcess(theElectronInTpbScintProcess);
+      	pmanager->SetProcessOrderingToLast(theElectronInTpbScintProcess, idxAtRest);
+      	pmanager->SetProcessOrderingToLast(theElectronInTpbScintProcess, idxPostStep);
+      }
+    if(theProtonInTpbScintProcess && particleName == "proton")
+      if(theProtonInTpbScintProcess->IsApplicable(*particle)) {
+      	printf("Defined proton scintillation in TPB using WlsScintillation\n");
+      	pmanager->AddProcess(theProtonInTpbScintProcess);
+      	pmanager->SetProcessOrderingToLast(theProtonInTpbScintProcess, idxAtRest);
+      	pmanager->SetProcessOrderingToLast(theProtonInTpbScintProcess, idxPostStep);
+      }
+    if(theIonInTpbScintProcess && particleName == "GenericIon")
+      if(theIonInTpbScintProcess->IsApplicable(*particle)) {
+      	printf("Defined ion scintillation in TPB using WlsScintillation\n");
+      	pmanager->AddProcess(theIonInTpbScintProcess);
+      	pmanager->SetProcessOrderingToLast(theIonInTpbScintProcess, idxAtRest);
+      	pmanager->SetProcessOrderingToLast(theIonInTpbScintProcess, idxPostStep);
+      }
+
       if (particleName == "opticalphoton") {
 	      pmanager->AddDiscreteProcess(theAbsorptionProcess);
-	      pmanager->AddDiscreteProcess(theRayleighScatteringProcess);
+//	      pmanager->AddDiscreteProcess(theRayleighScatteringProcess);
 	      pmanager->AddDiscreteProcess(theBoundaryProcess);
 	      pmanager->AddDiscreteProcess(theWLSProcess);
       }
-    }
+    }//end of while loop
 }
 #include "G4Cerenkov.hh"
 
 void LegendPhysicsList::ConstructCerenkov(){
 
   G4Cerenkov*   theCerenkovProcess = new G4Cerenkov("Cerenkov");
-  G4int MaxNumPhotons = 300;
   G4ProcessManager * pmanager = 0;
   //theCerenkovProcess->SetTrackSecondariesFirst(true);
   //theCerenkovProcess->SetMaxNumPhotonsPerStep(MaxNumPhotons);
@@ -539,6 +596,7 @@ void LegendPhysicsList::ConstructCerenkov(){
     }
   }
 }
+
 // Hadronic processes ////////////////////////////////////////////////////////
 
 // Elastic processes:

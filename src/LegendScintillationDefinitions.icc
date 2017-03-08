@@ -1,0 +1,65 @@
+//Taken from home/gold/MaGe-master/munichteststand/src/GEMPIKLArGe.cc
+  static const G4int NUMENTRIES = 69;
+  const G4int num = 22;
+  static const G4double temp = 88.5*kelvin;
+  static const G4double LambdaE = twopi *1.973269602e-16 * m * GeV;
+  G4double scint_yield = 40000./MeV; //sono 40000
+
+  G4int ji;
+  G4double e;
+  G4double ee;
+
+  G4double PPCKOVHighE = LambdaE / (115*nanometer);
+  G4double PPCKOVLowE = LambdaE / (650*nanometer); 
+  G4double de = ((PPCKOVHighE - PPCKOVLowE) / ((G4double)(NUMENTRIES-1)));
+  G4double LArAbsLength = 3*m; //just a number. ICARUS says it is negligible over 
+  // the 17m*3.5m*3.8m T300 volume
+
+  // liquid argon (LAr)  
+  G4double LAr_PPCK[(NUMENTRIES)];
+  G4double LAr_RIND[(NUMENTRIES)];
+  G4double LAr_RAYL[(NUMENTRIES)];
+  G4double LAr_ABSL[(NUMENTRIES)];
+  for (ji = 0; ji < NUMENTRIES; ji++)
+    {
+      e = PPCKOVLowE + ((G4double)ji) * de;
+      LAr_PPCK[ji] = e;
+      LAr_RIND[ji] = LArRefIndex((LambdaE / e));
+      LAr_RAYL[ji] = LArRayLength((LambdaE / e), temp);
+      LAr_ABSL[ji] = LArAbsLength;
+    }
+
+  G4double PPSCHighE = LambdaE /(115*nanometer);
+  G4double PPSCLowE = LambdaE /(136*nanometer);
+  G4double dee = ((PPSCHighE - PPSCLowE) / ((G4double)(num-1)));
+  G4double LAr_SCIN[num];
+  G4double LAr_SCPP[num];
+  for (ji = 0; ji < num; ji++)
+    {
+      ee=PPSCLowE+ ((G4double)ji) * dee;
+      LAr_SCPP[ji]=ee;
+      LAr_SCIN[ji]=ArScintillationSpectrum((LambdaE/ee)/nanometer);
+    }
+
+  G4MaterialPropertiesTable* LAr_mt = new G4MaterialPropertiesTable();
+
+  LAr_mt->AddProperty("RINDEX",        LAr_PPCK, LAr_RIND, NUMENTRIES);
+  LAr_mt->AddProperty("RAYLEIGH",      LAr_PPCK, LAr_RAYL, NUMENTRIES);
+  LAr_mt->AddProperty("ABSLENGTH",     LAr_PPCK, LAr_ABSL, NUMENTRIES);
+  if ( (LAr_SCPP[0] >= PPCKOVLowE) &&
+       (LAr_SCPP[(sizeof(LAr_SCPP)/sizeof(G4double) - 1)] <= PPCKOVHighE) )
+    {
+      LAr_mt->AddProperty("FASTCOMPONENT",LAr_SCPP,LAr_SCIN,num);
+      LAr_mt->AddProperty("SLOWCOMPONENT",LAr_SCPP,LAr_SCIN,num);
+    }
+  LAr_mt->AddConstProperty("SCINTILLATIONYIELD",scint_yield);
+  LAr_mt->AddConstProperty("RESOLUTIONSCALE",1.0);
+  LAr_mt->AddConstProperty("FASTTIMECONSTANT", 6.*ns);
+  LAr_mt->AddConstProperty("SLOWTIMECONSTANT",1590.*ns);
+  LAr_mt->AddConstProperty("YIELDRATIO",0.23);
+ G4cout<<LAr_SCIN<<G4endl;
+  G4double fano = 0.11;
+  LAr_mt->AddConstProperty("RESOLUTIONSCALE",fano); 
+  mat_ArLiq->SetMaterialPropertiesTable(LAr_mt); // G4Material defined in Detector_Materials.icc
+  mat_ArLiq->GetIonisation()->SetBirksConstant(5.1748e-4*cm/MeV);//0.0144*mm/MeV);
+  //G4Material::GetMaterial("LiquidArgon")->SetMaterialPropertiesTable(LAr_mt); 

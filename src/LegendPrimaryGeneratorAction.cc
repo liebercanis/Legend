@@ -50,8 +50,8 @@ LegendPrimaryGeneratorAction::LegendPrimaryGeneratorAction(){
   fParticleGun->SetParticleDefinition(particleTable->FindParticle(particleName="gamma"));
   //Default energy,position,momentum
   fParticleGun->SetParticleEnergy(pGun_nrg);//511.0*keV);
-  fParticleGun->SetParticlePosition(G4ThreeVector(0.0 ,0.,0.));// 0.0, -20.0*cm));
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,1.));
+  fParticleGun->SetParticlePosition(G4ThreeVector(0.0 ,0.,-0.9));// 0.0, -20.0*cm));
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.,0.,-1.));
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

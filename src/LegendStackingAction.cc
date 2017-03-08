@@ -61,15 +61,19 @@ LegendStackingAction::ClassifyNewTrack(const G4Track * aTrack){
   //particle is optical photon
   if(aTrack->GetDefinition()==G4OpticalPhoton::OpticalPhotonDefinition())
   {
+//    G4cout<<"is it making here?"<<G4endl;
     // particle is secondary
     if(aTrack->GetParentID()>0)
-    {      
+    {
+ //   G4cout<<"is it making here?"<<G4endl;
       if(aTrack->GetCreatorProcess()->GetProcessName()=="Scintillation")
       {
         eventInformation->IncPhotonCount_Scint();
+        //G4cout<<"Energy Deposited"<<eventInformation->GetEDep()<<G4endl;
       }
       else if(aTrack->GetCreatorProcess()->GetProcessName()=="Cerenkov")
         eventInformation->IncPhotonCount_Ceren();
+     //else G4cout<<"Creator Process is ::"<<aTrack->GetCreatorProcess()->GetProcessName()<<G4endl;
     }
   }
  // else{
