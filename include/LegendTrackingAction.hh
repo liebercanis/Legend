@@ -43,7 +43,8 @@ class LegendRecorderBase;
 class LegendTrackingAction : public G4UserTrackingAction {
 
   public:
-
+    const G4double twopi = 6.28318530718; 
+    const G4double LambdaE = twopi *1.973269602e-16 * m * GeV;
     LegendTrackingAction(LegendRecorderBase*);
     virtual ~LegendTrackingAction() {};
 
@@ -51,6 +52,9 @@ class LegendTrackingAction : public G4UserTrackingAction {
     virtual void PostUserTrackingAction(const G4Track*);
     TDirectory *fDir;
     TH1F *hTrackPhotonE;
+    TH1F *hTrackPhotonWavelength;
+    TH1F *hTrackWLSPhotonE;
+    TH1F *hTrackWLSPhotonWavelength;
  
   //TH1F *LAr_Spectrum = new TH1F("Scintillation from LAr"," counts vs photon energy in LAr",N,Nrg[0],Nrg[N-1]);
 

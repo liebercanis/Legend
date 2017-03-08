@@ -35,6 +35,8 @@
 #include "G4UserSteppingAction.hh"
 
 #include "G4OpBoundaryProcess.hh"
+#include "TDirectory.h"
+#include "TH1F.h"
 
 class LegendRecorderBase;
 class LegendEventAction;
@@ -53,6 +55,9 @@ class LegendSteppingAction : public G4UserSteppingAction
     G4bool GetOneStepPrimaries(){return fOneStepPrimaries;}
  
   private:
+    
+    TDirectory* fDir;
+    TH1F* hWLSPhotonE;
 
     LegendRecorderBase* fRecorder;
     G4bool fOneStepPrimaries;

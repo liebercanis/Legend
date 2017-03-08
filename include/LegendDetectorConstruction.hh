@@ -18,8 +18,6 @@
 #ifndef LegendDetectorConstruction_h
 #define LegendDetectorConstruction_h 1
 
-#include "G4NistManager.hh"
-
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4VUserDetectorConstruction.hh"
@@ -45,10 +43,22 @@
 #include "G4Torus.hh"
 #include "G4UnionSolid.hh"
 
+#include "G4VisAttributes.hh"
+#include "G4Colour.hh"
+
+#include "G4SDManager.hh"
+#include "G4RunManager.hh"
+
+#include "G4NistManager.hh"
 #include "G4LogicalSkinSurface.hh"
 #include "G4LogicalBorderSurface.hh"
 #include "G4OpticalSurface.hh"
-#include "G4VisAttributes.hh"
+
+#include "G4Isotope.hh"
+#include "G4Element.hh"
+#include "G4Material.hh"
+#include "G4MaterialPropertiesTable.hh"
+#include "G4MaterialPropertyVector.hh"
 
 #include "LegendDetectorMessenger.hh"
 #include "LegendScintSD.hh"
@@ -57,6 +67,7 @@
 
 // -- ROOT include
 #include "TGraph.h"
+#include "TFile.h"
 
 
 class G4VPhysicalVolume;
@@ -95,9 +106,15 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
       G4double eff=0;
       if(wavelength>350.0 && wavelength < 650.0) eff =fTPBspec->Eval(wavelength);
       //if (eff < 0.2) eff = 0.2;
-      //G4cout<<" TPBemission energy =" << energy << " nm " << nm  << " 
-      //  << wavelength (nm)  " << wavelength << " eff= "  << eff << G4endl;
+      //G4cout<<" TPBemission energy =" << energy << " nm " << nm  << " << wavelength (nm)  " << wavelength << " eff= "  << eff << G4endl;
       //MGLog(routine) << "Eval ("<< targetf/nm<< ")yielded a value of " << eff << endlog;
+      return eff;
+    }
+
+    G4double VM2000EmissionSpectrum(G4double energy) { 
+      G4double wavelength = LambdaE/energy/nm;
+      G4double eff=0;
+      if(wavelength>350.0 && wavelength < 650.0) eff =fVM2000spec->Eval(wavelength);
       return eff;
     }
 
@@ -106,10 +123,27 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     }
     TDirectory *fDir;
     TH1F *hDetecWLSPhotonE;
+    TH1F* hDetecWLSPhotonWavelength;
+
+  /// Define some colors that will be used later
+  //visualization attributes
+  /*G4Colour lgreen (0.0,  0.4, 0.0) ;
+  G4Colour lblue  (0.0,  0.0, 0.4) ;
+  G4Colour llblue (0.,  0.0, 0.04) ;
+  G4Colour blue_gray  (175/255. ,157/255. ,189/255. ) ;
+  G4Colour red    (1,  0.0, 0.0);
+  G4Colour lred   (0.4,  0.0, 0.0);
+  G4Colour light_gray(214./255.,214./255.,214./255.);
+  G4Colour dark_gray(135./255.,135./255.,135./255.);
+*/
+//  Not sure why colours won't work. Something wrong in the declaration  G4Colour lgreen (0.0,  0.4, 0.0) ;
+
   private:
     static const G4double LambdaE;
     TFile *tpbFile;
+    TFile *fVM2000File;
     TGraph *fTPBspec;
+    TGraph *fVM2000spec;
     LegendDetectorMessenger* detectorMessenger;  // pointer to the Messenger
 		G4bool checkOverlaps;
 		G4String detector_type;
@@ -127,13 +161,13 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4Tubs* solid_fillGas;
 
     //G4Materials...G4Elements
-    G4Material* fPstyrene;
-    G4Element* fC;
-    G4Element* fH;
-    G4Material* fGlass;
-    G4Material* fAl;
-    G4Element* fN;
-    G4Element* fO;
+    //G4Material* fPstyrene;
+    //G4Element* fC;
+    //G4Element* fH;
+    //G4Material* fGlass;
+    //G4Material* fAl;
+    //G4Element* fN;
+    //G4Element* fO;
     G4Material* mat_fillGas;
     G4Material*  fTPB;
     G4MaterialPropertiesTable *tpbTable;
@@ -153,6 +187,8 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4LogicalVolume* logical_Rock;
     G4LogicalVolume* logical_DetGeCrystal;
     G4LogicalVolume* logical_innerVessel;
+    G4LogicalVolume* logical_wls;
+    G4LogicalVolume* logical_VM2000Cylinder;
 
     //Physical Volume: Get Physical
     G4VPhysicalVolume* physical_Rock;
@@ -162,13 +198,17 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4VPhysicalVolume* physical_Photocath;
     G4VPhysicalVolume* physical_ScintSlab;
     G4VPhysicalVolume* physical_fillGas;
+    G4VPhysicalVolume* physical_wls;
+    
+    //Surface Objects
     G4LogicalSkinSurface *  skin_copper;
     G4LogicalSkinSurface *  skin_photocath;
     G4LogicalSkinSurface* fSkin_WLS;
     G4OpticalSurface* fWLSoptSurf;
     G4OpticalSurface* fPMTGlassOptSurface;
-    
-    //Sensitive Detectors
+    G4LogicalBorderSurface * wls_LogicalInnerSuface ;
+    G4LogicalBorderSurface * wls_LogicalOuterSurface ;
+        //Sensitive Detectors
 		G4Cache<LegendScintSD*> Scint_SD;
     G4Cache<LegendPMTSD*> Pmt_SD ;
 

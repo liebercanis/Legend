@@ -35,6 +35,8 @@
 #include "globals.hh"
 #include "G4UserStackingAction.hh"
 
+#include "TH1F.h"
+#include "TDirectory.h"
 class LegendStackingAction : public G4UserStackingAction
 {
   public:
@@ -45,6 +47,9 @@ class LegendStackingAction : public G4UserStackingAction
     virtual G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track* aTrack);
     virtual void NewStage();
     virtual void PrepareNewEvent();
+    
+    TDirectory *fDir;
+    TH1F * hWLSPhotonE;
  
   private:
 };
