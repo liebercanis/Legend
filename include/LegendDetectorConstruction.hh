@@ -189,6 +189,7 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4LogicalVolume* logical_innerVessel;
     G4LogicalVolume* logical_wls;
     G4LogicalVolume* logical_VM2000Cylinder;
+    G4LogicalVolume* logical_PMTGlassWLS;
 
     //Physical Volume: Get Physical
     G4VPhysicalVolume* physical_Rock;
