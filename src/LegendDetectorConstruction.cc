@@ -161,7 +161,7 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   //Inner Vessel Optical properties
   //
   //not sure we need Optical Properties if
-  //The inside is coats with VM2000 !!!! (it's over 2000)
+  //The inside is coats with VM2000 !!!!
   static const G4int NUMENTRIES_LAr = 69;
   G4double refl = .96;
   G4double effncy = 0.;
@@ -201,27 +201,18 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 
   //#include "Detector_MJDStyle.icc"
 
-  //Pmts  
-  G4double innerR_pmt = 0.*cm;
-  G4double outerR_pmt = 2.3*cm;
-  G4double height_pmt =0.03175*m;
-  G4double startAngle_pmt = 0.*deg;
-  G4double spanningAngle_pmt = 360.*deg;
-
-  solid_Pmt = new G4Tubs("solid_pmt",innerR_pmt,outerR_pmt,height_pmt,startAngle_pmt,spanningAngle_pmt);
+  
+ /* solid_Pmt = new G4Tubs("solid_pmt",innerR_pmt,outerR_pmt,height_pmt,startAngle_pmt,spanningAngle_pmt);
   solid_Photocath = new G4Tubs("solid_photocath",innerR_pmt,outerR_pmt,height_pmt/2,startAngle_pmt,spanningAngle_pmt);
  
   logical_Pmt = new G4LogicalVolume(solid_Pmt,G4Material::GetMaterial("Glass"),"logical_Pmt");
   logical_Photocath = new G4LogicalVolume(solid_Photocath,G4Material::GetMaterial("Al"),"logical_Photocath_log");
  
   physical_Photocath = new G4PVPlacement(0,G4ThreeVector(0,0,-height_pmt/2),logical_Photocath,"photocath",logical_Pmt,false,0,checkOverlaps);
-//  physical_PMT = new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+height_pmt),logical_Pmt,"phys_Pmt",logical_World,false,0,checkOverlaps);
+  physical_PMT = new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+height_pmt),logical_Pmt,"phys_Pmt",logical_World,false,0,checkOverlaps);
+*/
 
-  logical_Pmt->SetVisAttributes ( new G4VisAttributes(G4Colour(0.6,0.1,0.7) ) );
- 
-  //fPMTGlassOptSurface defined in LegendDetectorMaterials.icc
-  new G4LogicalSkinSurface("PMTGlass_surf",logical_Pmt,fPMTGlassOptSurface);
- 
+  /*
   //Photocathode surface
   G4double photocath_EFF[NUMENTRIES_LAr];
   G4double photocath_ReR[NUMENTRIES_LAr];
@@ -241,6 +232,7 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   
   photocath_opsurf->SetMaterialPropertiesTable(photocath_mt);
   skin_photocath = new G4LogicalSkinSurface("photocath_surf",logical_Photocath,photocath_opsurf);
+  */
 
   //VM2000 reflector foil inside the copper cryo
   //Reflector (VM2000)
@@ -263,7 +255,8 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 
   logical_VM2000Cylinder = new G4LogicalVolume(fVM2000CylinderSolid,fMaterialVM2000,"logical_VM2000Cylinder");
 
-  new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_VM2000Cylinder,"phys_VM2000Cylinder",logical_World,false,0);
+  //Seems to be causing some major problems
+  //new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_VM2000Cylinder,"phys_VM2000Cylinder",logical_World,false,0);
 
   G4double Reflectivity[NUMENTRIES_LAr];
   //G4double Efficiency[num];
@@ -281,6 +274,12 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   G4OpticalSurface* reflOptSurface = new G4OpticalSurface("VM_surface");
 
   new G4LogicalSkinSurface("VM_surface",logical_VM2000Cylinder,reflOptSurface);
+  
+  reflOptSurface->SetType(dielectric_dielectric);
+  // The reflection should be either spike or Lobe.
+  reflOptSurface->SetFinish(polishedfrontpainted); 
+  reflOptSurface->SetMaterialPropertiesTable(vmOpTable);
+
   // Visualization
   G4VisAttributes* fVM2000VisAtt = new G4VisAttributes(G4Color(0,204./255.,204./255.));
   fVM2000VisAtt -> SetVisibility(true);
@@ -352,13 +351,15 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
    G4double height_WLS = innerR_cryo;//0.05*m;
    G4double startAngle_WLS = 0.*deg;
    G4double spanningAngle_WLS = 360.*deg;
-   G4double innerR_WLS = innerR_cryo/2-1*cm;//-5*micrometer;;//innerR_cryo/2;//0.*m;
+   G4double thickness_WLS = 1*cm;
+   G4double innerR_WLS = innerR_cryo/2-thickness_WLS;//-5*micrometer;;//innerR_cryo/2;//0.*m;
    G4double outerR_WLS = innerR_cryo/2;//2 +delta*100
    G4Tubs* fSolid_ScintSlab = new G4Tubs("Solid_wlsSlab",innerR_WLS,outerR_WLS,height_WLS,startAngle_WLS,spanningAngle_WLS);
    
    logical_wls = new G4LogicalVolume(fSolid_ScintSlab,fTPB,"Logical_WLSCylinder");
 
-   physical_wls = new G4PVPlacement(0,
+  
+    physical_wls = new G4PVPlacement(0,
                                   //G4ThreeVector(fDetCenter.x(),fDetCenter.y(),fDetCenter.z() + fShroud_Offset),
                                   G4ThreeVector(0,0,0),
                                   logical_wls,
@@ -375,12 +376,47 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
  wls_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSCylinder_in_surf",physical_World /*physical_fillGas*/,physical_wls,fWLSoptSurf);
  wls_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLSCylinder_out_surf",physical_wls,physical_World /*physical_fillGas*/,fWLSoptSurf);
 
-   G4Colour lblue (0.0, 0.0, 0.8 );
-   G4VisAttributes* fWLSVisAtt = new G4VisAttributes(lblue);
-   fWLSVisAtt -> SetVisibility(true);
-   fWLSVisAtt -> SetForceSolid(false);
-   logical_wls-> SetVisAttributes(fWLSVisAtt);
-   
+  G4Colour lblue (0.0, 0.0, 0.8 );
+  G4VisAttributes* fWLSVisAtt = new G4VisAttributes(lblue);
+  fWLSVisAtt -> SetVisibility(true);
+  fWLSVisAtt -> SetForceSolid(false);
+  logical_wls-> SetVisAttributes(fWLSVisAtt);
+
+  /// PMTs + WLS coating
+  G4double PMTHousing_Thickness = 0.6*mm;
+  G4double PMTGlass_Thickness = 3.4*mm;
+  G4double PMT_Radius = 2.3*cm;
+  G4double PMT_Height =0.03175*m;
+  G4double startAngle_pmt = 0.*deg;
+  G4double spanningAngle_pmt = 360.*deg;
+
+  G4VSolid* fPMT_OuterVolume = new G4Tubs("PMT_OuterVolume",0,PMT_Radius,PMT_Height/2.,0,2*M_PI);        
+  G4VSolid* fPMT_InnerVolume = new G4Tubs("PMT_InnerVolume",0.,(PMT_Radius-PMTHousing_Thickness),0.5*(PMT_Height-PMTHousing_Thickness),0,2*M_PI);
+  G4VSolid* fPMT_housing = new G4SubtractionSolid("PMT_housing",fPMT_OuterVolume,fPMT_InnerVolume,0,G4ThreeVector(0., 0., -PMTHousing_Thickness/2.));
+ 
+  //Metal housing, Kovar is a Ni Co alloy
+  G4Material* fMaterialPMTHousing = G4Material::GetMaterial("Kovar");
+  G4LogicalVolume* fPMTHousingLogical = new G4LogicalVolume(fPMT_housing,fMaterialPMTHousing,"logical_PMTHousing");  
+  
+  G4VSolid* fPMT_glass = new G4Tubs("PMT_glass",0,PMT_Radius,PMTGlass_Thickness/2.,0,2*M_PI);
+  
+  G4Material* fMaterialPMTGlass = G4Material::GetMaterial("Quartz"); 
+  G4LogicalVolume* logical_PMTGlass = new G4LogicalVolume(fPMT_glass,fMaterialPMTGlass,"logical_PMTGlass");            
+  
+  G4VSolid* fPMT_WLS = new G4Tubs("PMT_WLS",0,PMT_Radius,thickness_WLS/2.,0,2*M_PI);
+  
+  logical_PMTGlassWLS = new G4LogicalVolume(fPMT_WLS,fTPB,"logical_PMTGlassWLS");   
+  
+  logical_PMTGlassWLS->SetVisAttributes ( new G4VisAttributes(G4Colour(0.6,0.1,0.7) ) );
+  //fPMTGlassOptSurface defined in LegendDetectorMaterials.icc
+  new G4LogicalSkinSurface("PMTGlass_surf",logical_PMTGlass,fPMTGlassOptSurface);
+  //PMT housin
+  new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+PMT_Height/2),logical_PMTGlass,"phys_PMTHousing",logical_World,false,0,checkOverlaps);
+  //PMT GLASS
+  new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+PMT_Height+PMTGlass_Thickness/2),logical_PMTGlass,"phys_PMTGlass",logical_World,false,0,checkOverlaps);
+  //WLS PMT GLASS
+  new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+PMT_Height+PMTGlass_Thickness+thickness_WLS/2),logical_PMTGlassWLS,"phys_WLSGlassPmt",logical_World,false,0,checkOverlaps);
+  
    return physical_World;
 }
 
