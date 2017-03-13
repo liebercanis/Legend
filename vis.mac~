@@ -1,0 +1,35 @@
+#EDITED by Neil
+# Macro file for the initialization phase of "Legend.cc"
+# when runing in interactive mode
+#
+# Sets some default verbose
+#
+/run/verbose 1 
+/control/verbose 1
+#/exp/setShieldingStyle GERDA
+/exp/setFillGas ArgonLiquid
+/exp/update
+
+
+/vis/open OGL 600x600-0+0
+#
+/vis/viewer/set/style wireframe
+/vis/viewer/set/auxiliaryEdge true
+/vis/viewer/set/lineSegmentsPerCircle 100
+#Set direction from target to camera.
+/vis/viewer/set/viewpointVector 1 1.5 1.1
+/vis/viewer/set/viewpointThetaPhi 80 9999999990 deg
+/vis/viewer/zoom 63.2736
+#/vis/viewer/zoom 1.31769
+#/vis/viewer/set/viewpointThetaPhi 0 0 deg
+
+/vis/drawVolume
+
+#/tracking/storeTrajectory 1
+#/run/initialize
+#/Legend/saveThreshold 10000000
+#/Legend/pmtThreshold 0
+#/Legend/eventVerbose 1
+#/vis/ogl/set/displayListLimit 50000
+#/run/beamOn 1
+#/vis/scene/endOfEventAction accumulate 10

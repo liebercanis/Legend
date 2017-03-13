@@ -1,0 +1,7 @@
+/home/nmcfadde/Legend/CMakeFiles/install/strip.dir
+/home/nmcfadde/Legend/CMakeFiles/install/local.dir
+/home/nmcfadde/Legend/CMakeFiles/install.dir
+/home/nmcfadde/Legend/CMakeFiles/list_install_components.dir
+/home/nmcfadde/Legend/CMakeFiles/edit_cache.dir
+/home/nmcfadde/Legend/CMakeFiles/rebuild_cache.dir
+/home/nmcfadde/Legend/CMakeFiles/Legend.dir

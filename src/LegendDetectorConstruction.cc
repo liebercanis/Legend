@@ -27,6 +27,8 @@
 //#include "G4LogicalBorderSurface.hh"
 
 #include "math.h"
+#include <vector>
+#include "string.h"
 
 #include "G4NistManager.hh"
 #include "G4VisAttributes.hh"
@@ -70,25 +72,7 @@ LegendDetectorConstruction::LegendDetectorConstruction()
     G4cout<<" LegendDetectorConstruction ERROR:: not graph tpbBhemann in file " << pathFile <<G4endl;
   else 
     G4cout<<" LegendDetectorConstruction info tpbBhemann graph found " <<G4endl;
-  //******//
-  //VM2000
-  //******//
-  pathFile = "External_data/VM2000.root";
-  TFile *VM2000File = new TFile(pathFile.data());
-  if (!VM2000File ) 
-    G4cout<<" LegendDetectorConstruction ERROR:: file " << pathFile << " not found " << G4endl;
-  else
-    G4cout<<" LegendDetectorConstruction INFO:: file " << pathFile << " opened " << G4endl;
-  fVM2000spec=NULL;
-  VM2000File->GetObject("VM2000_EmissionProfile",fVM2000spec);
-  if (!fVM2000spec ) 
-    G4cout<<" LegendDetectorConstruction ERROR:: not graph VM2000 in file " << pathFile <<G4endl;
-  else 
-    G4cout<<" LegendDetectorConstruction info VM2000 graph found " <<G4endl;
-
-
-   G4cout<<" LegendDetectorConstruction constant LambdaE =" << LambdaE << G4endl;
-  
+    
   // create directory 
   fDir = LegendAnalysis::Instance()->topDir()->mkdir("detec");
   fDir->cd();
@@ -99,7 +83,16 @@ LegendDetectorConstruction::LegendDetectorConstruction()
   G4double HighE = 12.3984*eV;//100 nm
   hDetecWLSPhotonE = new TH1F("DetecWLSPhotonE"," photon energy in WLS",1000,LowE,HighE);
   hDetecWLSPhotonWavelength = new TH1F("DetecWLSPhotonWavelength"," photon Wavelength in WLS",1000,LambdaE/HighE,LambdaE/LowE);
-
+ 
+  /// PMTs + WLS coating
+  innerR_cryo = 0.95*m;
+  thickness_WLS = 1.0*cm;
+  PMTHousing_Thickness = 0.6*mm;
+  PMTGlass_Thickness = 3.4*mm;
+  PMT_Radius = 8.0*cm;//2.3*cm;
+  PMT_Height =0.03175*m;
+  startAngle_pmt = 0.*deg;
+  spanningAngle_pmt = 360.*deg;
 
 }
 
@@ -117,7 +110,6 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   //Most materials are defined here, things like Argon and TPB are defined below
 	#include "LegendDetectorMaterials.icc"
   ArgonOpticalProperties();
-//	#include "LegendScintillationDefinitions.icc"
 	////////////////////////////////////////////////////////////////////////////////////////
 	//
   // World
@@ -144,7 +136,7 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 
   //TODO do not forget about adding back in the Ge Array
 
-  G4double innerR_cryo = 0.95*m;
+  //G4double innerR_cryo = 0.95*m;
   G4double delta = 0.00001*m;
 
 	//inner Vessel
@@ -159,7 +151,6 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   
   
   //Inner Vessel Optical properties
-  //
   //not sure we need Optical Properties if
   //The inside is coats with VM2000 !!!!
   static const G4int NUMENTRIES_LAr = 69;
@@ -199,92 +190,7 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   logical_fillGas->SetVisAttributes ( new G4VisAttributes(G4Colour(0.7,0.1,0.1,0.5) ) );//0.5, 0.5, 0.5, 0.5) )); //grey 50% transparent
   physical_fillGas = new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_fillGas,"phy_fillGas",logical_World,false,0,checkOverlaps);
 
-  //#include "Detector_MJDStyle.icc"
-
-  
- /* solid_Pmt = new G4Tubs("solid_pmt",innerR_pmt,outerR_pmt,height_pmt,startAngle_pmt,spanningAngle_pmt);
-  solid_Photocath = new G4Tubs("solid_photocath",innerR_pmt,outerR_pmt,height_pmt/2,startAngle_pmt,spanningAngle_pmt);
- 
-  logical_Pmt = new G4LogicalVolume(solid_Pmt,G4Material::GetMaterial("Glass"),"logical_Pmt");
-  logical_Photocath = new G4LogicalVolume(solid_Photocath,G4Material::GetMaterial("Al"),"logical_Photocath_log");
- 
-  physical_Photocath = new G4PVPlacement(0,G4ThreeVector(0,0,-height_pmt/2),logical_Photocath,"photocath",logical_Pmt,false,0,checkOverlaps);
-  physical_PMT = new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+height_pmt),logical_Pmt,"phys_Pmt",logical_World,false,0,checkOverlaps);
-*/
-
-  /*
-  //Photocathode surface
-  G4double photocath_EFF[NUMENTRIES_LAr];
-  G4double photocath_ReR[NUMENTRIES_LAr];
-  G4double photocath_ImR[NUMENTRIES_LAr];
-   for (int ij = 0; ij < NUMENTRIES_LAr; ij++){
-     photocath_EFF[ij] = 1.;//Enables 'detection' of photons
-     photocath_ReR[ij] = 1.92;
-     photocath_ImR[ij] = 1.69;
-   }
-  G4MaterialPropertiesTable* photocath_mt = new G4MaterialPropertiesTable();
-  
-  photocath_mt->AddProperty("EFFICIENCY",LAr_Energy,photocath_EFF,NUMENTRIES_LAr);
-  photocath_mt->AddProperty("REALRINDEX",LAr_Energy,photocath_ReR,NUMENTRIES_LAr);
-  photocath_mt->AddProperty("IMAGINARYRINDEX",LAr_Energy,photocath_ImR,NUMENTRIES_LAr);
-  
-  G4OpticalSurface* photocath_opsurf = new G4OpticalSurface("photocath_opsurf",glisur,polished,dielectric_metal);
-  
-  photocath_opsurf->SetMaterialPropertiesTable(photocath_mt);
-  skin_photocath = new G4LogicalSkinSurface("photocath_surf",logical_Photocath,photocath_opsurf);
-  */
-
-  //VM2000 reflector foil inside the copper cryo
-  //Reflector (VM2000)
-  //From Dario's thesis, reflectivity of VM2000 is ~98% above 370 nm
-  //and ~15% below it (almost a step-function)
-  //Read this paper, It seems Neil does not understand
-  //exactly what GERDA is doing with the TPB and VM2000
-  //https://arxiv.org/pdf/1503.05349.pdf
-  //From their code and comments, it seems they are usings
-  //specs for a TPB VM2000 mix and attributing those
-  //specs to the TPB itself, while the VM2000 is only
-  //a reflector...IDK
-  G4double VM2000_thickness = 1*mm;
-  G4double VM2000_outerR = innerR_cryo/2+VM2000_thickness;
-  G4double VM2000_innerR = innerR_cryo/2;
-  G4double VM2000_height = innerR_cryo;
-  G4VSolid* fVM2000CylinderSolid = new G4Tubs("solid_VM2000Cylinder",VM2000_innerR,VM2000_outerR,VM2000_height,0,2*M_PI);
-  
-  G4Material*fMaterialVM2000 = G4Material::GetMaterial("VM2000");
-
-  logical_VM2000Cylinder = new G4LogicalVolume(fVM2000CylinderSolid,fMaterialVM2000,"logical_VM2000Cylinder");
-
-  //Seems to be causing some major problems
-  //new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_VM2000Cylinder,"phys_VM2000Cylinder",logical_World,false,0);
-
-  G4double Reflectivity[NUMENTRIES_LAr];
-  //G4double Efficiency[num];
-
-  for (int ji=0;ji < NUMENTRIES_LAr; ji++)
-  {
-    if (LAr_Energy[ji] < (LambdaE/(370*nanometer)))
-      Reflectivity[ji] = 0.98; //visible
-    else
-      Reflectivity[ji] = 0.15; //UV
-  }
-  G4MaterialPropertiesTable *vmOpTable = new G4MaterialPropertiesTable();
-  vmOpTable->AddProperty("REFLECTIVITY",LAr_Energy,Reflectivity,NUMENTRIES_LAr);
-
-  G4OpticalSurface* reflOptSurface = new G4OpticalSurface("VM_surface");
-
-  new G4LogicalSkinSurface("VM_surface",logical_VM2000Cylinder,reflOptSurface);
-  
-  reflOptSurface->SetType(dielectric_dielectric);
-  // The reflection should be either spike or Lobe.
-  reflOptSurface->SetFinish(polishedfrontpainted); 
-  reflOptSurface->SetMaterialPropertiesTable(vmOpTable);
-
-  // Visualization
-  G4VisAttributes* fVM2000VisAtt = new G4VisAttributes(G4Color(0,204./255.,204./255.));
-  fVM2000VisAtt -> SetVisibility(true);
-  fVM2000VisAtt -> SetForceSolid(false);
-  logical_VM2000Cylinder-> SetVisAttributes(fVM2000VisAtt);
+  #include "Detector_MJDStyle.icc"
 
   // add WLS 
   // -- WLS: TPB (Tetraphenyl butadiene)
@@ -344,51 +250,51 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
    // Define a rough optical surface to be used in the interface between WLS and LAr
    // 50% roughness in the surface
    // This surface will be attached between the WLS and the LAr in all instances
-   // STILL TRYING TO DEBUG
    G4double roughness = 0.5;
    fWLSoptSurf = new G4OpticalSurface("WLS_rough_surf",glisur,ground,dielectric_dielectric,roughness);
 
-   G4double height_WLS = innerR_cryo;//0.05*m;
+   G4double height_WLS = innerR_cryo;
    G4double startAngle_WLS = 0.*deg;
    G4double spanningAngle_WLS = 360.*deg;
-   G4double thickness_WLS = 1*cm;
-   G4double innerR_WLS = innerR_cryo/2-thickness_WLS;//-5*micrometer;;//innerR_cryo/2;//0.*m;
-   G4double outerR_WLS = innerR_cryo/2;//2 +delta*100
-   G4Tubs* fSolid_ScintSlab = new G4Tubs("Solid_wlsSlab",innerR_WLS,outerR_WLS,height_WLS,startAngle_WLS,spanningAngle_WLS);
-   
-   logical_wls = new G4LogicalVolume(fSolid_ScintSlab,fTPB,"Logical_WLSCylinder");
+   G4double innerR_WLS = innerR_cryo-thickness_WLS;
+   G4double outerR_WLS = innerR_cryo;
 
+   G4Tubs* fSolid_ScintSlab = new G4Tubs("Solid_wlsCylinder",innerR_WLS,outerR_WLS,height_WLS,startAngle_WLS,spanningAngle_WLS);
+ 
+   logical_wlsCylinder = new G4LogicalVolume(fSolid_ScintSlab,fTPB,"Logical_WLSCylinder");
   
-    physical_wls = new G4PVPlacement(0,
-                                  //G4ThreeVector(fDetCenter.x(),fDetCenter.y(),fDetCenter.z() + fShroud_Offset),
-                                  G4ThreeVector(0,0,0),
-                                  logical_wls,
-                                  "phys_WLSCylinderPhysical",
-                                  logical_fillGas,//logical_World,//logical_fillGas,
-                                  false,
-                                  0,checkOverlaps);
+   physical_wlsCylinder = new G4PVPlacement(0,G4ThreeVector(0,0,0),
+                          logical_wlsCylinder,"phys_WLSCylinder",logical_fillGas,false,0,checkOverlaps);
+  
+   G4Tubs* fSolid_WLSDisk = new G4Tubs("Solid_wlsDisk",0.,innerR_WLS,thickness_WLS/2,startAngle_WLS,spanningAngle_WLS);
+   logical_wlsDisk = new G4LogicalVolume(fSolid_WLSDisk,fTPB,"Logical_WLSDisk");
 
- //Considered rough from both sides
- //Not sure if it should be fillGas or World, but I am guessing
- //This describes the boundry between LAr and WLS, thus fillGas
- //it the correct answer. But it crashes with bad physics when 
- //it is fillGas...IDK
- wls_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSCylinder_in_surf",physical_World /*physical_fillGas*/,physical_wls,fWLSoptSurf);
- wls_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLSCylinder_out_surf",physical_wls,physical_World /*physical_fillGas*/,fWLSoptSurf);
+   physical_wlsDiskTop = new G4PVPlacement(0,G4ThreeVector(0,0,innerR_cryo-thickness_WLS/2),
+                         logical_wlsDisk,"phys_WLSTopDisk",logical_fillGas,false,0,checkOverlaps);
+   physical_wlsDiskBottom = new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+thickness_WLS/2),
+                         logical_wlsDisk,"phys_WLSBottomDisk",logical_fillGas,false,1,checkOverlaps);
+
+ //Considered rough from both sides.
+ //This describes the boundry between LAr and WLS
+ //There still is an error between the boundry of LAr and WLS, physical_World seems to fix this most of the time, but may not model the world correctly
+
+ wlsCylinder_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSCylinder_in_surf",physical_World,physical_wlsCylinder,fWLSoptSurf);
+ wlsCylinder_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLSCylinder_out_surf",physical_wlsCylinder,physical_World,fWLSoptSurf);
+
+ wlsDiskTop_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSDiskTop_in_surf",physical_World,physical_wlsDiskTop,fWLSoptSurf);
+ wlsDiskTop_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLDiskTop_out_surf",physical_wlsDiskTop,physical_World,fWLSoptSurf);
+
+ wlsDiskBottom_LogicalInnerSuface =  new G4LogicalBorderSurface("phy_WLSDiskBottom_in_surf",physical_World,physical_wlsDiskBottom,fWLSoptSurf);
+ wlsDiskBottom_LogicalOuterSurface =  new G4LogicalBorderSurface("phy_WLSDiskBottom_out_surf",physical_wlsDiskBottom,physical_World,fWLSoptSurf);
 
   G4Colour lblue (0.0, 0.0, 0.8 );
   G4VisAttributes* fWLSVisAtt = new G4VisAttributes(lblue);
   fWLSVisAtt -> SetVisibility(true);
   fWLSVisAtt -> SetForceSolid(false);
-  logical_wls-> SetVisAttributes(fWLSVisAtt);
+  logical_wlsCylinder-> SetVisAttributes(fWLSVisAtt);
+  logical_wlsDisk-> SetVisAttributes(fWLSVisAtt);
 
-  /// PMTs + WLS coating
-  G4double PMTHousing_Thickness = 0.6*mm;
-  G4double PMTGlass_Thickness = 3.4*mm;
-  G4double PMT_Radius = 2.3*cm;
-  G4double PMT_Height =0.03175*m;
-  G4double startAngle_pmt = 0.*deg;
-  G4double spanningAngle_pmt = 360.*deg;
+  /////////////PMT coated in WLS/////////////
 
   G4VSolid* fPMT_OuterVolume = new G4Tubs("PMT_OuterVolume",0,PMT_Radius,PMT_Height/2.,0,2*M_PI);        
   G4VSolid* fPMT_InnerVolume = new G4Tubs("PMT_InnerVolume",0.,(PMT_Radius-PMTHousing_Thickness),0.5*(PMT_Height-PMTHousing_Thickness),0,2*M_PI);
@@ -396,12 +302,12 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
  
   //Metal housing, Kovar is a Ni Co alloy
   G4Material* fMaterialPMTHousing = G4Material::GetMaterial("Kovar");
-  G4LogicalVolume* fPMTHousingLogical = new G4LogicalVolume(fPMT_housing,fMaterialPMTHousing,"logical_PMTHousing");  
+  logical_PMTHousing = new G4LogicalVolume(fPMT_housing,fMaterialPMTHousing,"logical_PMTHousing");  
   
   G4VSolid* fPMT_glass = new G4Tubs("PMT_glass",0,PMT_Radius,PMTGlass_Thickness/2.,0,2*M_PI);
   
   G4Material* fMaterialPMTGlass = G4Material::GetMaterial("Quartz"); 
-  G4LogicalVolume* logical_PMTGlass = new G4LogicalVolume(fPMT_glass,fMaterialPMTGlass,"logical_PMTGlass");            
+  logical_PMTGlass = new G4LogicalVolume(fPMT_glass,fMaterialPMTGlass,"logical_PMTGlass");            
   
   G4VSolid* fPMT_WLS = new G4Tubs("PMT_WLS",0,PMT_Radius,thickness_WLS/2.,0,2*M_PI);
   
@@ -410,13 +316,31 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
   logical_PMTGlassWLS->SetVisAttributes ( new G4VisAttributes(G4Colour(0.6,0.1,0.7) ) );
   //fPMTGlassOptSurface defined in LegendDetectorMaterials.icc
   new G4LogicalSkinSurface("PMTGlass_surf",logical_PMTGlass,fPMTGlassOptSurface);
-  //PMT housin
-  new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+PMT_Height/2),logical_PMTGlass,"phys_PMTHousing",logical_World,false,0,checkOverlaps);
-  //PMT GLASS
-  new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+PMT_Height+PMTGlass_Thickness/2),logical_PMTGlass,"phys_PMTGlass",logical_World,false,0,checkOverlaps);
-  //WLS PMT GLASS
-  new G4PVPlacement(0,G4ThreeVector(0,0,-innerR_cryo+PMT_Height+PMTGlass_Thickness+thickness_WLS/2),logical_PMTGlassWLS,"phys_WLSGlassPmt",logical_World,false,0,checkOverlaps);
+ 
+  G4double R =  innerR_cryo-PMT_Radius-thickness_WLS;//innerR_cryo/2;// 2*PMT_Radius;
+  int N_Circles = (innerR_cryo-PMT_Radius-thickness_WLS)/(2*PMT_Radius);
+  //For debugging, turn OFF!
+  checkOverlaps = false;
+  for(int i = 0; i < N_Circles; i++){
+    int N = M_PI/(std::asin(PMT_Radius/(R-PMT_Radius)));
+    G4double ratio = PMT_Radius/(R-PMT_Radius);
+    double theta = std::asin(ratio);
+    double dtheta = 0;
+    
+    for(int j = 0; j < N ; j++){
+      G4double x = (R-PMT_Radius)*std::cos(dtheta);
+      G4double y = (R-PMT_Radius)*std::sin(dtheta);
+      PlacePMT(x,y,0,1,numPMT);
+      PlacePMT(x,y,0,-1,numPMT);
+      dtheta += 2*theta;
+      if(dtheta >= 2*M_PI) dtheta -= 2*M_PI;
+    }
+    R -=2*PMT_Radius;
+  }
   
+
+  //TODO...Is the pmt glass rough on both sides
+    
    return physical_World;
 }
 
@@ -427,28 +351,43 @@ G4VPhysicalVolume* LegendDetectorConstruction::Construct()
 
 void LegendDetectorConstruction::ConstructSDandField()
 {
-  //This top method is taken from the LXe example
-  if (!Scint_SD.Get()) {
-		G4cout<<"Construction /Legend/scintSD"<<G4endl;
-		LegendScintSD* scint_SD = new LegendScintSD("/LegendDet/scintSD");//intialize with some G4string, to call later
-		Scint_SD.Put(scint_SD);
-	}
-	G4SDManager::GetSDMpointer()->AddNewDetector(Scint_SD.Get());
-  SetSensitiveDetector(logical_fillGas,Scint_SD.Get());
-  
-  // PMT SD
-  if (!Pmt_SD.Get()) {
-    //Created here so it exists as pmts are being placed
-    G4cout << "Construction /Legend/pmtSD" << G4endl;
-    LegendPMTSD* pmt_SD = new LegendPMTSD("/LegendDet/pmtSD");
-    Pmt_SD.Put(pmt_SD);
-
-    pmt_SD->InitPMTs(1); //let pmtSD know # of pmts
-    pmt_SD->SetPmtPosition(G4ThreeVector(0,0,-0.95*m+0.03175*m));
-  }
-  G4SDManager::GetSDMpointer()->AddNewDetector(Pmt_SD.Get());
-
+  //Using GERDA methods and headers for making
+  G4SDManager* SDman   =  G4SDManager::GetSDMpointer();
+  LegendScintSD* ScintSD  = new LegendScintSD("ScintSD");
+  SDman->AddNewDetector(ScintSD);
+  logical_fillGas->SetSensitiveDetector(ScintSD);
+ 
+  //PMT are sensitive, use kind words
+  LegendPMTSD* PMTSD = new LegendPMTSD("PhotoCathode",numPMT,"PhCathodeHC" );    
+  SDman->AddNewDetector(PMTSD); 
+  logical_PMTGlass->SetSensitiveDetector(PMTSD);
 }
+
+void LegendDetectorConstruction::PlacePMT(G4double x,G4double y,G4double z,double top_or_bot,int num)
+{
+  G4PVPlacement* phys_PMTHousing = new G4PVPlacement(0,
+      G4ThreeVector(x,y,top_or_bot*(innerR_cryo-thickness_WLS-PMT_Height/2))
+      ,logical_PMTHousing,
+      "phys_PMTHousing_"+std::to_string(num),logical_fillGas,false,num,checkOverlaps);
+  //PMT GLASS
+  G4PVPlacement* phys_PMTGlass = new G4PVPlacement(0,
+      G4ThreeVector(x,y,top_or_bot*(innerR_cryo-thickness_WLS-PMT_Height-PMTGlass_Thickness/2))
+      ,logical_PMTGlass,"phys_PMTGlass_"+std::to_string(num),logical_fillGas,false,num,checkOverlaps);
+  //WLS PMT GLASS
+  G4PVPlacement* phys_PMTWLS = new G4PVPlacement(0,
+      G4ThreeVector(x,y,top_or_bot*(innerR_cryo-thickness_WLS-PMT_Height-PMTGlass_Thickness-thickness_WLS/2))
+      ,logical_PMTGlassWLS,"phys_WLSGlassPmt_"+std::to_string(num),logical_fillGas,false,num,checkOverlaps);
+
+  G4double roughness = 0.5;
+  fWLSoptSurf = new G4OpticalSurface("WLS_rough_surf",glisur,ground,dielectric_dielectric,roughness);
+ 
+  //WLS is rough on both sides
+  new G4LogicalBorderSurface("Phys_PMT_WLS_"+ std::to_string(num),physical_fillGas,phys_PMTWLS,fWLSoptSurf);
+  new G4LogicalBorderSurface("Phys_PMT_WLS_"+ std::to_string(num),phys_PMTWLS,physical_fillGas,fWLSoptSurf);
+
+  numPMT++;
+}
+
 /// methods imported from the mpiklarge class
 /// optical properties of lar in several places
 void LegendDetectorConstruction::ArgonOpticalProperties()

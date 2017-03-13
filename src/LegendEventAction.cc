@@ -30,8 +30,8 @@
 //
 //
 #include "LegendEventAction.hh"
-#include "LegendScintHit.hh"
-#include "LegendPMTHit.hh"
+#include "LegendScintSDHit.hh"
+#include "LegendPMTSDHit.hh"
 #include "LegendUserEventInformation.hh"
 #include "LegendTrajectory.hh"
 #include "LegendRecorderBase.hh"
@@ -70,10 +70,10 @@ void LegendEventAction::BeginOfEventAction(const G4Event* anEvent){
   //SD is sensitive detector
   G4SDManager* SDman = G4SDManager::GetSDMpointer();
   if(fScintCollID<0){
-    fScintCollID=SDman->GetCollectionID("scintCollection");
+    fScintCollID=SDman->GetCollectionID("ScintHC");
   }
   if(fPMTCollID<0)
-    fPMTCollID=SDman->GetCollectionID("pmtHitCollection");
+    fPMTCollID=SDman->GetCollectionID("PhCathodeHC");
   if(fRecorder)fRecorder->RecordBeginOfEvent(anEvent);
 }
  
@@ -102,14 +102,14 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
     }
   }
 
-  LegendScintHitsCollection* scintHC = 0;
-  LegendPMTHitsCollection* pmtHC = 0;
+  LegendScintSDHitsCollection* scintHC = 0;
+  LegendPMTSDHitsCollection* pmtHC = 0;
  // HC is hit count
   G4HCofThisEvent* hitsCE = anEvent->GetHCofThisEvent();
   //Get the hit collections
   if(hitsCE){
-    if(fScintCollID>=0)scintHC = (LegendScintHitsCollection*)(hitsCE->GetHC(fScintCollID));
-    if(fPMTCollID>=0) pmtHC = (LegendPMTHitsCollection*)(hitsCE->GetHC(fPMTCollID));
+    if(fScintCollID>=0)scintHC = (LegendScintSDHitsCollection*)(hitsCE->GetHC(fScintCollID));
+    if(fPMTCollID>=0) pmtHC = (LegendPMTSDHitsCollection*)(hitsCE->GetHC(fPMTCollID));
   }
 
   //Hits in scintillator
@@ -163,15 +163,16 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
     //Gather info from all PMTs
     for(G4int i=0;i<pmts;i++)
     {
-      eventInformation->IncHitCount((*pmtHC)[i]->GetPhotonCount());
-      reconPos+=(*pmtHC)[i]->GetPMTPos()*(*pmtHC)[i]->GetPhotonCount();
-      if((*pmtHC)[i]->GetPhotonCount()>=fPMTThreshold)
+      eventInformation->IncHitCount((*pmtHC)[i]->GetNdet());//GetPhotonCount());
+      reconPos+=(*pmtHC)[i]->GetPos()*(*pmtHC)[i]->GetNdet();//GetPhotonCount();
+      //G4cout<<"LegendEventAction::GetNdet"<<(*pmtHC)[i]->GetNdet()<<G4endl;
+      if((*pmtHC)[i]->GetNdet()/*GetPhotonCount()*/>=fPMTThreshold)
       {
         eventInformation->IncPMTSAboveThreshold();
       }
       else//wasnt above the threshold, turn it back off
       {
-        (*pmtHC)[i]->SetDrawit(false);
+        //(*pmtHC)[i]->SetDrawit(false);
       }
     }
  
@@ -184,7 +185,7 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
       }
       eventInformation->SetReconPos(reconPos);
     }
-    pmtHC->DrawAllHits();
+    pmtHC->DrawAllHits();// I can't find this function in LegendPMTSDHits...Can you?
   }
   
   //!!(113467) = !(0) = 1

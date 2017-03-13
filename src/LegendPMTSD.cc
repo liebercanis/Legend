@@ -1,167 +1,258 @@
+//---------------------------------------------------------------------------//
+//bb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nu//
+//                                                                           //
+//                            MaGe Simulation                                //
+//                                                                           //
+//      This code implementation is the intellectual property of the         //
+//      MAJORANA and Gerda Collaborations. It is based on Geant4, an         //
+//      intellectual property of the RD44 GEANT4 collaboration.              //
+//                                                                           //
+//                        *********************                              //
+//                                                                           //
+//    Neither the authors of this software system, nor their employing       //
+//    institutes, nor the agencies providing financial support for this      //
+//    work  make  any representation or  warranty, express or implied,       //
+//    regarding this software system or assume any liability for its use.    //
+//    By copying, distributing or modifying the Program (or any work based   //
+//    on on the Program) you indicate your acceptance of this statement,     //
+//    and all its terms.                                                     //
+//                                                                           //
+//bb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nu//
+//---------------------------------------------------------------------------//
+//                                                          
 //
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
+//---------------------------------------------------------------------------//
+/**
+ * SPECIAL NOTES:
+ * 
+ * Original desing by Alexander Klimenko
+ */
+// 
+//---------------------------------------------------------------------------//
+/**
+ *
+ * AUTHOR:  Markus Knapp
+ * CONTACT: @CONTACT@
+ * FIRST SUBMISSION: 
+ * 
+ * REVISION:
+ *
+ */
+//---------------------------------------------------------------------------//
 //
-// $Id: LegendPMTSD.cc 73915 2013-09-17 07:32:26Z gcosmo $
-//
-/// \file optical/Legend/src/LegendPMTSD.cc
-/// \brief Implementation of the LegendPMTSD class
-//
-//
+
+
+
 #include "LegendPMTSD.hh"
-#include "LegendPMTHit.hh"
-//#include "LegendDetectorConstruction.hh"
-#include "LegendUserTrackInformation.hh"
+#include "LegendPMTSDHit.hh"
 
 #include "G4VPhysicalVolume.hh"
 #include "G4LogicalVolume.hh"
-#include "G4Track.hh"
 #include "G4Step.hh"
 #include "G4VTouchable.hh"
 #include "G4TouchableHistory.hh"
-#include "G4ios.hh"
-#include "G4ParticleTypes.hh"
+#include "G4SDManager.hh"
+#include "G4Track.hh"
 #include "G4ParticleDefinition.hh"
+#include "G4SDManager.hh"
+#include "G4UnitsTable.hh"
+#include "G4ios.hh"
+#include "Randomize.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//#include "io/MGLogger.hh"//Gerda log maker...will flush later
 
-LegendPMTSD::LegendPMTSD(G4String name)
-  : G4VSensitiveDetector(name),fPMTHitCollection(0),fPMTPositionsX(0)
-  ,fPMTPositionsY(0),fPMTPositionsZ(0)
+G4ThreeVector pos;
+
+LegendPMTSD::LegendPMTSD(G4String name, G4int nCells, G4String colName)
+:G4VSensitiveDetector(name),numberOfCells(nCells),HCID(-1)
 {
-  collectionName.insert("pmtHitCollection");
+  G4String HCname;
+  collectionName.insert(HCname=colName);
+  CellID = new int[numberOfCells];
+ // MGLog(trace) << " ==--> "<< colName << "  "<< name<<"  LegendPMTSD  nCells= "<<nCells <<" SD name " << name<<"  \n" << endlog;
+
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-LegendPMTSD::~LegendPMTSD() {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void LegendPMTSD::SetPmtPositions(const std::vector<G4ThreeVector>& positions)
+LegendPMTSD::~LegendPMTSD()
 {
-  for (G4int i=0; i<G4int(positions.size()); ++i) {
-    if(fPMTPositionsX)fPMTPositionsX->push_back(positions[i].x());
-    if(fPMTPositionsY)fPMTPositionsY->push_back(positions[i].y());
-    if(fPMTPositionsZ)fPMTPositionsZ->push_back(positions[i].z());
-  }
+  delete [] CellID;
 }
 
-void LegendPMTSD::SetPmtPosition(G4ThreeVector positions)
+void LegendPMTSD::Initialize(G4HCofThisEvent* /*HCE*/)
 {
-    if(fPMTPositionsX)fPMTPositionsX->push_back(positions.x());
-    if(fPMTPositionsY)fPMTPositionsY->push_back(positions.y());
-    if(fPMTPositionsZ)fPMTPositionsZ->push_back(positions.z());
-  
-}
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//	MGLog(trace) << " ==--> LegendPMTSD  collection initialized \n" << endlog;
+  PMTCollection = new LegendPMTSDHitsCollection
+                      (SensitiveDetectorName,collectionName[0]); 
 
-void LegendPMTSD::Initialize(G4HCofThisEvent* hitsCE){
-  fPMTHitCollection = new LegendPMTHitsCollection
-                      (SensitiveDetectorName,collectionName[0]);
-  //Store collection with event and keep ID
-  static G4int hitCID = -1;
-  if(hitCID<0){
-    hitCID = GetCollectionID(0);
-  }
-  hitsCE->AddHitsCollection( hitCID, fPMTHitCollection );
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-G4bool LegendPMTSD::ProcessHits(G4Step* ,G4TouchableHistory* ){
-  return false;
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-//Generates a hit and uses the postStepPoint's mother volume replica number
-//PostStepPoint because the hit is generated manually when the photon is
-//absorbed by the photocathode
-
-G4bool LegendPMTSD::ProcessHits_constStep(const G4Step* aStep,
-                                       G4TouchableHistory* ){
-
-  //need to know if this is an optical photon
-  if(aStep->GetTrack()->GetDefinition()
-     != G4OpticalPhoton::OpticalPhotonDefinition()) return false;
- 
-  //User replica number 1 since photocathode is a daughter volume
-  //to the pmt which was replicated
-  G4int pmtNumber=
-    aStep->GetPostStepPoint()->GetTouchable()->GetReplicaNumber(1);
-  G4VPhysicalVolume* physVol=
-    aStep->GetPostStepPoint()->GetTouchable()->GetVolume(1);
-
-  //Find the correct hit collection
-  G4int n=fPMTHitCollection->entries();
-  LegendPMTHit* hit=NULL;
-  for(G4int i=0;i<n;i++){
-    if((*fPMTHitCollection)[i]->GetPMTNumber()==pmtNumber){
-      hit=(*fPMTHitCollection)[i];
-      break;
+  for(int j=0;j<numberOfCells;j++)   
+    { 
+      CellID[j] = -1;
     }
-  }
- 
-  if(hit==NULL){//this pmt wasnt previously hit in this event
-    hit = new LegendPMTHit(); //so create new hit
-    hit->SetPMTNumber(pmtNumber);
-    hit->SetPMTPhysVol(physVol);
-    fPMTHitCollection->insert(hit);
-    hit->SetPMTPos((*fPMTPositionsX)[pmtNumber],(*fPMTPositionsY)[pmtNumber],
-                   (*fPMTPositionsZ)[pmtNumber]);
+  TimeInit=-10.0;
+
+}
+
+G4bool LegendPMTSD::ProcessHits(G4Step* aStep, G4TouchableHistory* /*ROhist*/)
+{
+
+  G4ParticleDefinition* particleType = aStep->GetTrack()->GetDefinition();
+  G4String particleName = particleType->GetParticleName();
+  G4double edep = aStep->GetTotalEnergyDeposit();
+  //  G4double time = aStep->GetPostStepPoint()->GetGlobalTime();   //measured in nanoseconds;   
+  //  G4double time = aStep->GetTrack()->GetGlobalTime();
+  //  G4cout << "testpoint " << time <<  "\n";  
+
+  if(edep<=0. && (particleName != "opticalphoton")) 
+    {
+      return false;
+    }
+
+  const G4VPhysicalVolume* physVol = aStep->GetPreStepPoint()->GetPhysicalVolume();
+
+  G4int copyID = physVol->GetCopyNo();
+
+  if(CellID[copyID]==-1)
+  {
+    LegendPMTSDHit* pmtHit = new LegendPMTSDHit(physVol->GetLogicalVolume());
+    G4RotationMatrix rotM;
+
+    if(physVol->GetObjectRotation()) 
+      {
+	rotM = *(physVol->GetObjectRotation());
+      }
+
+    pmtHit->SetEdep( edep );
+    pmtHit->Set0Ndet(); // Hits number for initial time
+
+    pmtHit->SetPos(aStep->GetPostStepPoint()->GetPosition());
+    pmtHit->SetTotEnergy(aStep->GetTrack()->GetTotalEnergy() );
+    pmtHit->SetHittime( aStep->GetTrack()->GetGlobalTime() );
+    pmtHit->SetRot( rotM );
+    pmtHit->SetNdet( copyID );
+    pmtHit->SetParticleDirection((aStep->GetPreStepPoint())->GetMomentumDirection());
+    int icell = PMTCollection->insert( pmtHit );
+
+    CellID[copyID] = icell - 1;
+
+  
+//     if( TimeInit == -10.0 ) 
+//       {
+// 	pmtHit->SetTimeInit(time);
+// 	TimeInit = time;
+//       }
   }
 
-  hit->IncPhotonCount(); //increment hit for the selected pmt
- 
- /* if(!LegendDetectorConstruction::GetSphereOn()){
-    hit->SetDrawit(true);
-    //If the sphere is disabled then this hit is automaticaly drawn
+  else
+  { 
+    LegendPMTSDHit* pmtHit = new LegendPMTSDHit(physVol->GetLogicalVolume());
+    pmtHit->NumDet();
+    pmtHit->AddEdep(edep);
+    //   pmtHit->AddTime(time);
+    pmtHit->SetNdet(copyID+1);
+    pmtHit->SetPos(aStep->GetPostStepPoint()->GetPosition());
+    pmtHit->SetTotEnergy(aStep->GetTrack()->GetTotalEnergy() );    
+    pmtHit->SetHittime( aStep->GetTrack()->GetGlobalTime() );
+    pmtHit->SetParticleDirection((aStep->GetPreStepPoint())->GetMomentumDirection());
+    PMTCollection->insert( pmtHit );
   }
-  else{//sphere enabled
-    LegendUserTrackInformation* trackInfo=
-      (LegendUserTrackInformation*)aStep->GetTrack()->GetUserInformation();
-    if(trackInfo->GetTrackStatus()&hitSphere)
-      //only draw this hit if the photon has hit the sphere first
-      hit->SetDrawit(true);
-  }*/
 
   return true;
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+G4bool LegendPMTSD::ProcessHits_constStep(const G4Step* aStep, G4TouchableHistory* /*ROhist*/)
+{
 
-void LegendPMTSD::EndOfEvent(G4HCofThisEvent* ) {}
+  G4ParticleDefinition* particleType = aStep->GetTrack()->GetDefinition();
+  G4String particleName = particleType->GetParticleName();
+  G4double edep = aStep->GetTotalEnergyDeposit();
+  //  G4double time = aStep->GetPostStepPoint()->GetGlobalTime();   //measured in nanoseconds;
+  //  G4double time = aStep->GetTrack()->GetGlobalTime();
+  //  G4cout << "testpoint " << time <<  "\n";
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+  if(edep<=0. && (particleName != "opticalphoton"))
+    {
+      return false;
+    }
 
-void LegendPMTSD::clear() {}
+  const G4VPhysicalVolume* physVol = aStep->GetPostStepPoint()->GetPhysicalVolume();
+  G4int copyID = physVol->GetCopyNo();
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+  if(CellID[copyID]==-1)
+  {
+    LegendPMTSDHit* pmtHit = new LegendPMTSDHit(physVol->GetLogicalVolume());
+    G4RotationMatrix rotM;
 
-void LegendPMTSD::DrawAll() {}
+    if(physVol->GetObjectRotation())
+      {
+	rotM = *(physVol->GetObjectRotation());
+      }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+    pmtHit->SetEdep( edep );
+    pmtHit->Set0Ndet(); // Hits number for initial time
 
-void LegendPMTSD::PrintAll() {}
+    pmtHit->SetPos(aStep->GetPostStepPoint()->GetPosition());
+
+    //pmtHit->SetTotEnergy(edep);//aStep->GetTrack()->GetTotalEnergy() );
+    pmtHit->SetTotEnergy(aStep->GetTrack()->GetTotalEnergy() );
+    pmtHit->SetHittime( aStep->GetTrack()->GetGlobalTime() );
+    pmtHit->SetRot( rotM );
+    pmtHit->SetNdet( copyID );
+    pmtHit->SetParticleDirection((aStep->GetPreStepPoint())->GetMomentumDirection());
+    int icell = PMTCollection->insert( pmtHit );
+
+    CellID[copyID] = icell - 1;
+
+
+//     if( TimeInit == -10.0 )
+//       {
+// 	pmtHit->SetTimeInit(time);
+// 	TimeInit = time;
+//       }
+  }
+
+  else
+  {
+    LegendPMTSDHit* pmtHit = new LegendPMTSDHit(physVol->GetLogicalVolume());
+    pmtHit->NumDet();
+    pmtHit->AddEdep(edep);
+    //   pmtHit->AddTime(time);
+    pmtHit->SetNdet(copyID+1);
+    pmtHit->SetPos(aStep->GetPostStepPoint()->GetPosition());
+   // pmtHit->SetTotEnergy(edep); //aStep->GetTrack()->GetTotalEnergy() );
+    pmtHit->SetTotEnergy(aStep->GetTrack()->GetTotalEnergy() );
+    pmtHit->SetHittime( aStep->GetTrack()->GetGlobalTime() );
+    pmtHit->SetParticleDirection((aStep->GetPreStepPoint())->GetMomentumDirection());
+    PMTCollection->insert( pmtHit );
+  }
+
+  return true;
+}
+
+void LegendPMTSD::EndOfEvent(G4HCofThisEvent*HCE)
+{
+  if(HCID<0)
+    {
+      HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
+    }
+
+  HCE->AddHitsCollection( HCID, PMTCollection );
+}
+
+void LegendPMTSD::clear()
+{
+
+} 
+
+void LegendPMTSD::DrawAll()
+{
+  
+} 
+
+void LegendPMTSD::PrintAll()
+{
+
+} 
+
+
+
+

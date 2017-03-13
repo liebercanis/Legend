@@ -491,33 +491,6 @@ src/LegendMuonPhysics.cc.s:
 	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendMuonPhysics.cc.s
 .PHONY : src/LegendMuonPhysics.cc.s
 
-src/LegendPMTHit.o: src/LegendPMTHit.cc.o
-
-.PHONY : src/LegendPMTHit.o
-
-# target to build an object file
-src/LegendPMTHit.cc.o:
-	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTHit.cc.o
-.PHONY : src/LegendPMTHit.cc.o
-
-src/LegendPMTHit.i: src/LegendPMTHit.cc.i
-
-.PHONY : src/LegendPMTHit.i
-
-# target to preprocess a source file
-src/LegendPMTHit.cc.i:
-	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTHit.cc.i
-.PHONY : src/LegendPMTHit.cc.i
-
-src/LegendPMTHit.s: src/LegendPMTHit.cc.s
-
-.PHONY : src/LegendPMTHit.s
-
-# target to generate assembly for a file
-src/LegendPMTHit.cc.s:
-	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTHit.cc.s
-.PHONY : src/LegendPMTHit.cc.s
-
 src/LegendPMTSD.o: src/LegendPMTSD.cc.o
 
 .PHONY : src/LegendPMTSD.o
@@ -544,6 +517,33 @@ src/LegendPMTSD.s: src/LegendPMTSD.cc.s
 src/LegendPMTSD.cc.s:
 	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTSD.cc.s
 .PHONY : src/LegendPMTSD.cc.s
+
+src/LegendPMTSDHit.o: src/LegendPMTSDHit.cc.o
+
+.PHONY : src/LegendPMTSDHit.o
+
+# target to build an object file
+src/LegendPMTSDHit.cc.o:
+	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTSDHit.cc.o
+.PHONY : src/LegendPMTSDHit.cc.o
+
+src/LegendPMTSDHit.i: src/LegendPMTSDHit.cc.i
+
+.PHONY : src/LegendPMTSDHit.i
+
+# target to preprocess a source file
+src/LegendPMTSDHit.cc.i:
+	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTSDHit.cc.i
+.PHONY : src/LegendPMTSDHit.cc.i
+
+src/LegendPMTSDHit.s: src/LegendPMTSDHit.cc.s
+
+.PHONY : src/LegendPMTSDHit.s
+
+# target to generate assembly for a file
+src/LegendPMTSDHit.cc.s:
+	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendPMTSDHit.cc.s
+.PHONY : src/LegendPMTSDHit.cc.s
 
 src/LegendPhysicsList.o: src/LegendPhysicsList.cc.o
 
@@ -626,33 +626,6 @@ src/LegendRunAction.cc.s:
 	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendRunAction.cc.s
 .PHONY : src/LegendRunAction.cc.s
 
-src/LegendScintHit.o: src/LegendScintHit.cc.o
-
-.PHONY : src/LegendScintHit.o
-
-# target to build an object file
-src/LegendScintHit.cc.o:
-	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintHit.cc.o
-.PHONY : src/LegendScintHit.cc.o
-
-src/LegendScintHit.i: src/LegendScintHit.cc.i
-
-.PHONY : src/LegendScintHit.i
-
-# target to preprocess a source file
-src/LegendScintHit.cc.i:
-	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintHit.cc.i
-.PHONY : src/LegendScintHit.cc.i
-
-src/LegendScintHit.s: src/LegendScintHit.cc.s
-
-.PHONY : src/LegendScintHit.s
-
-# target to generate assembly for a file
-src/LegendScintHit.cc.s:
-	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintHit.cc.s
-.PHONY : src/LegendScintHit.cc.s
-
 src/LegendScintSD.o: src/LegendScintSD.cc.o
 
 .PHONY : src/LegendScintSD.o
@@ -679,6 +652,33 @@ src/LegendScintSD.s: src/LegendScintSD.cc.s
 src/LegendScintSD.cc.s:
 	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintSD.cc.s
 .PHONY : src/LegendScintSD.cc.s
+
+src/LegendScintSDHit.o: src/LegendScintSDHit.cc.o
+
+.PHONY : src/LegendScintSDHit.o
+
+# target to build an object file
+src/LegendScintSDHit.cc.o:
+	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintSDHit.cc.o
+.PHONY : src/LegendScintSDHit.cc.o
+
+src/LegendScintSDHit.i: src/LegendScintSDHit.cc.i
+
+.PHONY : src/LegendScintSDHit.i
+
+# target to preprocess a source file
+src/LegendScintSDHit.cc.i:
+	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintSDHit.cc.i
+.PHONY : src/LegendScintSDHit.cc.i
+
+src/LegendScintSDHit.s: src/LegendScintSDHit.cc.s
+
+.PHONY : src/LegendScintSDHit.s
+
+# target to generate assembly for a file
+src/LegendScintSDHit.cc.s:
+	$(MAKE) -f CMakeFiles/Legend.dir/build.make CMakeFiles/Legend.dir/src/LegendScintSDHit.cc.s
+.PHONY : src/LegendScintSDHit.cc.s
 
 src/LegendSpecialCuts.o: src/LegendSpecialCuts.cc.o
 
@@ -999,12 +999,12 @@ help:
 	@echo "... src/LegendMuonPhysics.o"
 	@echo "... src/LegendMuonPhysics.i"
 	@echo "... src/LegendMuonPhysics.s"
-	@echo "... src/LegendPMTHit.o"
-	@echo "... src/LegendPMTHit.i"
-	@echo "... src/LegendPMTHit.s"
 	@echo "... src/LegendPMTSD.o"
 	@echo "... src/LegendPMTSD.i"
 	@echo "... src/LegendPMTSD.s"
+	@echo "... src/LegendPMTSDHit.o"
+	@echo "... src/LegendPMTSDHit.i"
+	@echo "... src/LegendPMTSDHit.s"
 	@echo "... src/LegendPhysicsList.o"
 	@echo "... src/LegendPhysicsList.i"
 	@echo "... src/LegendPhysicsList.s"
@@ -1014,12 +1014,12 @@ help:
 	@echo "... src/LegendRunAction.o"
 	@echo "... src/LegendRunAction.i"
 	@echo "... src/LegendRunAction.s"
-	@echo "... src/LegendScintHit.o"
-	@echo "... src/LegendScintHit.i"
-	@echo "... src/LegendScintHit.s"
 	@echo "... src/LegendScintSD.o"
 	@echo "... src/LegendScintSD.i"
 	@echo "... src/LegendScintSD.s"
+	@echo "... src/LegendScintSDHit.o"
+	@echo "... src/LegendScintSDHit.i"
+	@echo "... src/LegendScintSDHit.s"
 	@echo "... src/LegendSpecialCuts.o"
 	@echo "... src/LegendSpecialCuts.i"
 	@echo "... src/LegendSpecialCuts.s"

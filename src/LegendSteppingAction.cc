@@ -34,6 +34,7 @@
 #include "LegendTrackingAction.hh"
 #include "LegendTrajectory.hh"
 #include "LegendPMTSD.hh"
+#include "LegendScintSD.hh"
 #include "LegendUserTrackInformation.hh"
 #include "LegendUserEventInformation.hh"
 #include "LegendSteppingMessenger.hh"
@@ -109,7 +110,6 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
     G4int i;
     for( i = 0; i < nprocesses; i++)
     {
-      //if( !((*pv)[i]->GetProcessName()=="OpBoundary") ) G4cout<<"Processes that are not OpBoundary :: "<<(*pv)[i]->GetProcessName()<<G4endl;
       if((*pv)[i]->GetProcessName()=="OpBoundary" )
       {
         boundary = (G4OpBoundaryProcess*)(*pv)[i];
@@ -136,7 +136,6 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
         if(creator)
         {
           G4String creatorName=creator->GetProcessName();
-          //G4cout<<"CreatorName :: "<<creatorName<<G4endl;
           if(creatorName=="phot"||creatorName=="compt"||creatorName=="conv")
           {
             //since this is happening before the secondary is being tracked
@@ -148,7 +147,10 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
     }
     //I wonder what this does?
     //Orginally it was scint... with  lower case s, but should be CAP Scint...
-    if(fOneStepPrimaries&&thePrePV->GetName()=="Scintillator") theTrack->SetTrackStatus(fStopAndKill);
+    if(fOneStepPrimaries&&thePrePV->GetName()=="scintillator"){
+      theTrack->SetTrackStatus(fStopAndKill);
+      G4cout<<"'LegendSteppingAction::PrePV Scintillator photon stopped and killed"<<G4endl;
+    }
   }
 
   if(!thePostPV)//out of the world
@@ -161,13 +163,11 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
   if(particleType==G4OpticalPhoton::OpticalPhotonDefinition())
   {
+    //Need local definition for hit processing
+    G4Step* step = const_cast<G4Step*>(theStep);
     //Optical photon only
-    if(thePrePV->GetName()!="phys_WLSCylinderPhysical" && thePrePV->GetName()!="phy_fillGas"){
- //     G4cout<<"LegendSteppingAction:: The Pre PV Name:: "<<thePrePV->GetName()<<G4endl;
-    }
     if(thePrePV->GetName()=="phys_WLSCylinderPhysical"){
       //force drawing of photons in WLS slab
-      //G4cout<<"A photon hit the WLS slab names phy_ScintSlab"<<G4endl;
       trackInformation->SetForceDrawTrajectory(true);
       G4double KE = theTrack->GetKineticEnergy();
       hWLSPhotonE->Fill(KE);
@@ -177,7 +177,9 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
     //Kill photons entering expHall from something other than Slab
     if(thePostPV->GetName()=="phy_World")//"expHall") 
     {
-//      G4cout<<thePostPoint->GetProcessDefinedStep()->GetProcessName()<<"did they kill the process at the boundy?"<<G4endl;
+      //If the photon enters the "real" world, it will not have enough
+      //life experience to survice on its own. Thus a quick death is
+      //all we can do for it. Make sure to count it as well.
       theTrack->SetTrackStatus(fStopAndKill);
       eventInformation->IncBoundaryAbsorption();
     }
@@ -187,7 +189,16 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
     {
       eventInformation->IncAbsorption();
       trackInformation->AddTrackStatusFlag(absorbed);
+      if(thePrePV->GetName()=="phy_fillGas"){
+        G4SDManager* SDman = G4SDManager::GetSDMpointer();
+        G4String sdName="ScintSD";//"/LegendDet/pmtSD";
+        LegendScintSD* ScintSD = (LegendScintSD*)SDman->FindSensitiveDetector(sdName);
+        if(ScintSD){ 
+          ScintSD->ProcessHits(step,NULL);
+        }
+      }
     }
+
     if(thePostPoint->GetProcessDefinedStep()->GetProcessName()=="OpBoundry"){
       G4cout<<"OpBoundry is foundry"<<G4endl;
     }
@@ -203,16 +214,12 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
       {
         if(boundaryStatus!=StepTooSmall)
         {
+          G4cout<< "LegendSteppingAction::UserSteppingAction(): No reallocation step after reflection!"<<G4endl;          
           G4cout<<"LegendSteppinAction:: thePrePV of Process is :: "<< thePrePV->GetName()<<G4endl;
           G4cout<<"LegendSteppinAction:: thePostPV of Process is :: "<< thePostPV->GetName()<<G4endl;
-          
-          G4ExceptionDescription ed;
-          ed << "LegendSteppingAction::UserSteppingAction(): "
-                << "No reallocation step after reflection!"
-                << G4endl;
-          G4Exception("LegendSteppingAction::UserSteppingAction()", "LegendExpl01",
-          FatalException,ed,
-          "Something is wrong with the surface normal or geometry");
+          G4cout<<"\tSomething is wrong with the surface normal or geometry....Track is killed"<<G4endl;
+
+          theTrack->SetTrackStatus(fStopAndKill);
         }
       }
       fExpectedNextStatus=Undefined;
@@ -229,7 +236,7 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
           //Triger sensitive detector manually since photon is
           //absorbed but status was Detection
           G4SDManager* SDman = G4SDManager::GetSDMpointer();
-          G4String sdName="/LegendDet/pmtSD";
+          G4String sdName="PhotoCathode";//"/LegendDet/pmtSD";
           LegendPMTSD* pmtSD = (LegendPMTSD*)SDman->FindSensitiveDetector(sdName);
           if(pmtSD) pmtSD->ProcessHits_constStep(theStep,NULL);
           trackInformation->AddTrackStatusFlag(hitPMT);
@@ -249,7 +256,6 @@ void LegendSteppingAction::UserSteppingAction(const G4Step * theStep){
       default:
         break;
       }
-      //if(thePostPV->GetName()=="sphere") trackInformation->AddTrackStatusFlag(hitSphere);
     }   
   }//end of if(thePostPoint->GetStepStatus()==fGeomBoundary)
  // else G4cout<<"Particle type that is not optical is :: "<<particleType->GetParticleName()<<G4endl;
