@@ -36,8 +36,8 @@
 */
 #include "LegendAnalysis.hh"
 #include "LegendEventAction.hh"
-#include "LegendScintHit.hh"
-#include "LegendPMTHit.hh"
+#include "LegendScintSDHit.hh"
+#include "LegendPMTSDHit.hh"
 #include "LegendUserEventInformation.hh"
 #include "LegendTrajectory.hh"
 #include "LegendRecorderBase.hh"
@@ -77,124 +77,120 @@ void LegendEventAction::BeginOfEventAction(const G4Event* anEvent){
   //SD is sensitive detector
   G4SDManager* SDman = G4SDManager::GetSDMpointer();
   if(fScintCollID<0){
-    fScintCollID=SDman->GetCollectionID("scintCollection");
+    fScintCollID=SDman->GetCollectionID("ScintHC"); //scintCollection");
   }
   if(fPMTCollID<0)
-    fPMTCollID=SDman->GetCollectionID("pmtHitCollection");
+    fPMTCollID=SDman->GetCollectionID("PhCathodeHC"); //"pmtHitCollection");
 
   if(fRecorder)fRecorder->RecordBeginOfEvent(anEvent);
+  LegendAnalysis::Instance()->setScintCollID(fScintCollID);
+  LegendAnalysis::Instance()->setPMTCollID(fPMTCollID);
 }
  
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
 
+  G4cout << " =============  EndOfEventAction ================= " << G4endl;
+  G4cout << " This is the end of the event "  << G4endl; 
+  anEvent->Print();
+
   LegendUserEventInformation* eventInformation = (LegendUserEventInformation*)anEvent->GetUserInformation();
-  TTree *tree = LegendAnalysis::Instance()->getTree();
-  LTEvent* lEvent = (LTEvent*) LegendAnalysis::Instance()->getTree()->GetBranch("event");
- 
+
+  // fill the analysis tree
+  LegendAnalysis::Instance()->anaEvent( anEvent );
+
+  G4cout << "\t number of primary verticies = "<< anEvent->GetNumberOfPrimaryVertex() <<G4endl;
   G4TrajectoryContainer* trajectoryContainer = anEvent->GetTrajectoryContainer();
- 
   G4int n_trajectories = 0;
   if(trajectoryContainer) n_trajectories = trajectoryContainer->entries();
+  G4cout << "\t number of trajectories = "<< n_trajectories <<G4endl;
+  
   // extract the trajectories and draw them
-  if(G4VVisManager::GetConcreteInstance())
-  {
-    for (G4int i=0; i<n_trajectories; i++)
-    {
+  G4int nOptical =0;
+  if(G4VVisManager::GetConcreteInstance()) {
+    for (G4int i=0; i<n_trajectories; i++) {
       LegendTrajectory* trj = (LegendTrajectory*)((*(anEvent->GetTrajectoryContainer()))[i]);
-      if(trj->GetParticleName()=="opticalphoton")
-      {
+      //if(i<5) trj->ShowTrajectory(); // print out to G4cout
+      
+      if(trj->GetParticleName()=="opticalphoton") {
+        ++nOptical;
         trj->SetForceDrawTrajectory(fForcedrawphotons);
         trj->SetForceNoDrawTrajectory(fForcenophotons);
       }
       trj->DrawTrajectory();
     }
   }
+  G4cout << "\t number of optical  = "<< nOptical <<G4endl;
 
-  LegendScintHitsCollection* scintHC;// = 0;
-  LegendPMTHitsCollection* pmtHC = 0;
+  LegendScintSDHitsCollection* scintHC=NULL;// = 0;
+  LegendPMTSDHitsCollection* pmtHC =NULL;
  // HC is hit count
   G4HCofThisEvent* hitsCE = anEvent->GetHCofThisEvent();
+  
   //Get the hit collections
   if(hitsCE){
-    if(fScintCollID>=0)scintHC = (LegendScintHitsCollection*)(hitsCE->GetHC(fScintCollID));
-    if(fPMTCollID>=0) pmtHC = (LegendPMTHitsCollection*)(hitsCE->GetHC(fPMTCollID));
+    if(fScintCollID>=0)scintHC = (LegendScintSDHitsCollection*)(hitsCE->GetHC(fScintCollID));
+    if(fPMTCollID>=0) pmtHC = (LegendPMTSDHitsCollection*)(hitsCE->GetHC(fPMTCollID));
   }
 
   //Hits in scintillator
-  if(scintHC)
-  {
+  if(scintHC) {
     int n_hit = scintHC->entries();
-    G4cout<<n_hit<<" = Hits in Scintillator"<<G4endl;
+    G4cout<<"\t Hits in Scintillator = " << n_hit <<G4endl;
     G4ThreeVector  eWeightPos(0.);
     G4double edep;
     G4double edepMax=0;
 
-    for(int i=0;i<n_hit;i++)
-    { //gather info on hits in scintillator
+    for(int i=0;i<n_hit;i++) { //gather info on hits in scintillator
       edep=(*scintHC)[i]->GetEdep();
       eventInformation->IncEDep(edep); //sum up the edep
       eWeightPos += (*scintHC)[i]->GetPos()*edep;//calculate energy weighted pos
-      if(edep>edepMax)
-      {
+      if(edep>edepMax) {
         edepMax=edep;//store max energy deposit
         G4ThreeVector posMax=(*scintHC)[i]->GetPos();
         eventInformation->SetPosMax(posMax,edep);
       }
     }
     
-    lEvent->TotE=eventInformation->GetEDep();
+    //lEvent->TotE=eventInformation->GetEDep();
 
-    G4cout<<" ********** TotE = "<< lEvent->TotE <<G4endl;
-    if(eventInformation->GetEDep()==0.)
-    {
+    if(eventInformation->GetEDep()==0.) {
       if(fVerbose>0)G4cout<<"\tNo hits in the scintillator this event."<<G4endl;
-    }
-    else
-    {
+    } else {
       //Finish calculation of energy weighted position
       eWeightPos/=eventInformation->GetEDep();
       eventInformation->SetEWeightPos(eWeightPos);
-      if(fVerbose>0)
-      {
+      if(fVerbose>0) {
         G4cout << "\tEnergy weighted position of hits in Legend : "
                << eWeightPos/mm << G4endl;
       }
     }
-    if(fVerbose>0)
-    {
+    if(fVerbose>0){
     G4cout << "\tTotal energy deposition in scintillator : "
            << eventInformation->GetEDep() / keV << " (keV)" << G4endl;
     }
   }
  
-  if(pmtHC)
-  {
+  if(pmtHC) {
     G4ThreeVector reconPos(0.,0.,0.);
     G4int pmts=pmtHC->entries();
-    G4cout<<"pmt hit count = "<<pmts<<G4endl;
+    G4cout<<"\t PMT hit count = "<<pmts<<G4endl;
     //Gather info from all PMTs
-    for(G4int i=0;i<pmts;i++)
-    {
-      eventInformation->IncHitCount((*pmtHC)[i]->GetPhotonCount());
-      reconPos+=(*pmtHC)[i]->GetPMTPos()*(*pmtHC)[i]->GetPhotonCount();
-      if((*pmtHC)[i]->GetPhotonCount()>=fPMTThreshold)
-      {
+    for(G4int i=0;i<pmts;i++) {
+      eventInformation->IncHitCount((*pmtHC)[i]->GetNumPhotons());
+      reconPos+=(*pmtHC)[i]->GetPos()*(*pmtHC)[i]->GetNumPhotons();
+      if((*pmtHC)[i]->GetNumPhotons()>=fPMTThreshold) {
         eventInformation->IncPMTSAboveThreshold();
-      }
-      else//wasnt above the threshold, turn it back off
-      {
-        (*pmtHC)[i]->SetDrawit(false);
+      //} else {//wasnt above the threshold, turn it back off
+      //  (*pmtHC)[i]->SetDrawit(false);
       }
     }
  
-    if(eventInformation->GetHitCount()>0)//dont bother unless there were hits
-    {
+    if(eventInformation->GetHitCount()>0){ //dont bother unless there were hits
       reconPos/=eventInformation->GetHitCount();
       if(fVerbose>0){
-        G4cout << "\tReconstructed position of hits in Legend : "
-               << reconPos/mm << G4endl;
+        G4cout << "\tReconstructed position of hits in Legend : " << reconPos/mm << G4endl;
       }
       eventInformation->SetReconPos(reconPos);
     }
@@ -230,7 +226,6 @@ void LegendEventAction::EndOfEventAction(const G4Event* anEvent){
     G4RunManager::GetRunManager()->rndmSaveThisEvent();
 
   if(fRecorder)fRecorder->RecordEndOfEvent(anEvent);
-  tree->Fill();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -245,3 +240,4 @@ in a file called run###evt###.rndm
   G4RunManager::GetRunManager()->SetRandomNumberStoreDir("random/");
   //  G4UImanager::GetUIpointer()->ApplyCommand("/random/setSavingFlag 1");
 }
+

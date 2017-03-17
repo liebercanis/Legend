@@ -183,7 +183,7 @@ void LegendPhysicsList::ConstructProcess()
   
   ConstructCerenkov();
 
-  ConstructHad();
+  //ConstructHad();
 
   ConstructGeneral();
 

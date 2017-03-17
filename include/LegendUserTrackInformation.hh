@@ -23,7 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// $Id: LegendUserTrackInformation.hh 68752 2013-04-05 10:23:47Z gcosmo $
 //
 /// \file optical/Legend/include/LegendUserTrackInformation.hh
 /// \brief Definition of the LegendUserTrackInformation class
@@ -33,9 +32,11 @@
 
 #ifndef LegendUserTrackInformation_h
 #define LegendUserTrackInformation_h 1
-
+//IF you are going to add a status it must be a power of 2 because of the bitwise
+//functionallity of the AddTrackStatus Function
+//--Neil
 enum LegendTrackStatus { active=1, hitPMT=2, absorbed=4, boundaryAbsorbed=8,
-                      hitSphere=16, inactive=14};
+                      absorbedLAr=16, inactive=14, hitWLS = 32};
 
 /*LegendTrackStatus:
   active: still being tracked
@@ -56,7 +57,7 @@ class LegendUserTrackInformation : public G4VUserTrackInformation
     virtual ~LegendUserTrackInformation();
 
     //Sets the track status to s (does not check validity of flags)
-    void SetTrackStatusFlags(int sflag){fStatus=sflag;}
+    void SetTrackStatusFlags(int s){fStatus=s;}
     //Does a smart add of track status flags (disabling old flags that conflict)
     //If s conflicts with itself it will not be detected
     void AddTrackStatusFlag(int s);

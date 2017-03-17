@@ -1,112 +1,146 @@
+//---------------------------------------------------------------------------//
+//bb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nu//
+//                                                                           //
+//                                                                           //
+//                         MaGe Simulation                                   //
+//                                                                           //
+//      This code implementation is the intellectual property of the         //
+//      MAJORANA and Gerda Collaborations. It is based on Geant4, an         //
+//      intellectual property of the RD44 GEANT4 collaboration.              //
+//                                                                           //
+//                        *********************                              //
+//                                                                           //
+//    Neither the authors of this software system, nor their employing       //
+//    institutes, nor the agencies providing financial support for this      //
+//    work  make  any representation or  warranty, express or implied,       //
+//    regarding this software system or assume any liability for its use.    //
+//    By copying, distributing or modifying the Program (or any work based   //
+//    on on the Program) you indicate your acceptance of this statement,     //
+//    and all its terms.                                                     //
+//                                                                           //
+//bb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nu// 
+//---------------------------------------------------------------------------//
+//                                                          
+// $Id: LegendScintSD.cc,v 1.10 2009-06-16 14:42:20 pandola Exp $ 
+//      
+// CLASS IMPLEMENTATION:  @CLASS_NAME@.cc
 //
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-// $Id: LegendScintSD.cc 68752 2013-04-05 10:23:47Z gcosmo $
-//
-/// \file optical/Legend/src/LegendScintSD.cc
-/// \brief Implementation of the LegendScintSD class
-//
+//---------------------------------------------------------------------------//
+/**
+ * SPECIAL NOTES:
+ * 
+ *
+ */
+// 
+//---------------------------------------------------------------------------//
+/**
+ *
+ * AUTHOR:  Xiang Liu
+ * CONTACT: @CONTACT@
+ * FIRST SUBMISSION: @START_DATE@
+ * 
+ * REVISION:
+ *
+ * 30-11-2004, Luciano & Claudia, Registered SD for Water and Nitrogen
+ * 01-12-2004, Luciano. Bug fixed
+ * 09-12-2004, Claudia. Registered SD for plastic scintillator
+ * 07-12-2006, Manuela, added Collimator as sensitive volume
+ * 04-02-2007, Luciano, added PhysicalVolume in Hits
+ * 02-11-2007, Daniel, , added Worldposition 
+ * 06-16-2009, Luciano, added ParentID in Hits
+ * 05-23-2012, Nuno,	Removed the LAr Instrumentation from this class. Now it has a dedicated SD class.
+ */
+
+//---------------------------------------------------------------------------//
 //
 #include "LegendScintSD.hh"
-#include "LegendScintHit.hh"
-#include "G4VPhysicalVolume.hh"
-#include "G4LogicalVolume.hh"
-#include "G4Track.hh"
+#include "LegendScintSDHit.hh"
+
 #include "G4Step.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4VTouchable.hh"
+#include "G4HCofThisEvent.hh"
 #include "G4TouchableHistory.hh"
 #include "G4ios.hh"
-#include "G4VProcess.hh"
+#include "G4ThreeVector.hh"
+#include "G4ParticleDefinition.hh"
+#include "G4ParticleTypes.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//---------------------------------------------------------------------------//
 
 LegendScintSD::LegendScintSD(G4String name)
-  : G4VSensitiveDetector(name)
+:G4VSensitiveDetector(name)
 {
-  fScintCollection = NULL;
-  collectionName.insert("scintCollection");
+  G4String HCname;
+  //MGLog(debugging) << "Detector " << name << endlog;
+ /* if (name == "/mydet/gerda/N2buffer") HCname = "NitrogenHC";
+  else if (name == "/mydet/gerda/waterbuffer") HCname = "WaterHC";
+  else if (name == "/mydet/gerda/gecrystal") HCname = "GermaniumHC";
+  else if (name == "/mydet/gerda/passivation") HCname = "PassivationHC";
+  else if (name == "/mydet/gerda/deadlayer") HCname = "DeadLayerHC";
+  else if (name == "/mydet/gerda/collimatorsd") HCname = "CollimatorHC";
+  else if (name == "/mydet/gerda/scintPlate") HCname = "ScintHC";
+  */
+  HCname = "ScintHC";
+
+  collectionName.insert(HCname);
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+LegendScintSD::~LegendScintSD(){;}
 
-LegendScintSD::~LegendScintSD() {}
+void LegendScintSD::Initialize(G4HCofThisEvent* HCE)
+{ 
+  for (G4int i=0;i<(G4int)collectionName.size();i++)
+    {
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+      G4int HCID = -1;
 
-void LegendScintSD::Initialize(G4HCofThisEvent* hitsCE){
-  fScintCollection = new LegendScintHitsCollection
-                      (SensitiveDetectorName,collectionName[0]);
-  //A way to keep all the hits of this event in one place if needed
-  static G4int hitsCID = -1;
-  if(hitsCID<0){
-    hitsCID = GetCollectionID(0);
-  }
-  hitsCE->AddHitsCollection( hitsCID, fScintCollection );
+      HitsCollection = new LegendScintSDHitsCollection
+	(SensitiveDetectorName,collectionName[i]);
+      if(HCID<0)
+	{ 
+	  HCID = GetCollectionID(i); 
+	}
+      HCE->AddHitsCollection(HCID,HitsCollection);
+    }
+//   MGLog(debugging) << "Number of collections: " <<  HCE->GetNumberOfCollections() << 
+//     endlog;
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4bool LegendScintSD::ProcessHits(G4Step* aStep,G4TouchableHistory* ){
+G4bool LegendScintSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
+{
   G4double edep = aStep->GetTotalEnergyDeposit();
+  if(edep<=0.) return false;
+  if (aStep->GetTrack()->GetDefinition() != G4OpticalPhoton::OpticalPhotonDefinition()) return false;
 
-  if(edep==0.){
-    return false; //No edep so don't count as hit
-  }
-  G4StepPoint* thePrePoint = aStep->GetPreStepPoint();
-  G4TouchableHistory* theTouchable =
-    (G4TouchableHistory*)(aStep->GetPreStepPoint()->GetTouchable());
-  G4VPhysicalVolume* thePrePV = theTouchable->GetVolume();
- 
-  G4StepPoint* thePostPoint = aStep->GetPostStepPoint();
+  LegendScintSDHit* newHit = new LegendScintSDHit();
+  newHit->SetEdep( edep );
 
-  //Get the average position of the hit
-  G4ThreeVector pos = thePrePoint->GetPosition() + thePostPoint->GetPosition();
-  pos/=2.;
+  G4ThreeVector  worldPos =  aStep->GetPostStepPoint()->GetPosition();
+  newHit->SetPos( worldPos );
+  newHit->SetLocalPos( aStep->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(worldPos) );
+  newHit->SetHittime( aStep->GetPreStepPoint()->GetGlobalTime() );
+//  newHit->SetEkinetic( aStep->GetKineticEnergy() );
+  newHit->SetSteplength( aStep->GetStepLength() );
+//  newHit->SetTracklength( aStep->GetTrackLength() );
 
-  LegendScintHit* scintHit = new LegendScintHit(thePrePV);
-  scintHit->SetEdep(edep);
-  scintHit->SetPos(pos);
+  // how to get volume name
+  G4TouchableHistory* theTouchable
+    = (G4TouchableHistory*)(aStep->GetPreStepPoint()->GetTouchable());
+  newHit->SetVolumename( theTouchable->GetVolume()->GetName() );
+  newHit->SetCopynumber( theTouchable->GetVolume()->GetCopyNo() );
+  newHit->SetPhysicalVolume(aStep->GetTrack()->GetVolume());
 
-  fScintCollection->insert(scintHit);
+  // get track id
+  newHit->SetTrackID( aStep->GetTrack()->GetTrackID() );
+  newHit->SetTrackPDG( aStep->GetTrack()->GetDefinition()->GetPDGEncoding() );
+  newHit->SetParentTrackID(aStep->GetTrack()->GetParentID());
 
+//  newHit->SetTrackPDG( aStep->GetTrack()->GetDefinition() );
+
+  HitsCollection->insert( newHit );
   return true;
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+void LegendScintSD::EndOfEvent(G4HCofThisEvent*)
+{;}
 
-void LegendScintSD::EndOfEvent(G4HCofThisEvent* ) {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void LegendScintSD::clear() {} 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void LegendScintSD::DrawAll() {} 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void LegendScintSD::PrintAll() {} 

@@ -9,6 +9,11 @@
 #include <TTree.h>
 #include <TVector3.h>
 #include <vector>
+
+// LRoot classes
+#include "LTPVertex.hxx"
+#include "LTTraject.hxx"
+
 using namespace std;
 
 
@@ -20,24 +25,35 @@ class LTEvent: public TNamed {
 		~LTEvent();
 
     void clear();
+    void print();
     // data elements
 
-    Int_t HitCount;
-    Int_t PhotonCount_Scint;
-    Int_t PhotonCount_Ceren;
-    Int_t AbsorptionCount;
-    Int_t BoundaryAbsorptionCount;
+    Int_t evId;    // event id
+    Int_t nPVert; // number primary verticies
+    vector<LTPVertex> pvertex;
+    Int_t nTraj;
+    vector<LTTraject> traject;
 
-    Double_t TotE;
+    Int_t nPmtHits;
+    Int_t nPmtPhotons;
+    Int_t nArScint;
+    Int_t nWlsScint;
+    Int_t nCherenkov;
+    Int_t nAbsorbed;
+    Int_t nAbsorbedBoundary;
 
-    //These only have meaning if totE > 0
-    //If totE = 0 then these wont be set by EndOfEventAction
-    TVector3 EWeightPos;
-    TVector3 ReconPos; //Also relies on hitCount>0
-    TVector3 ConvPos;//true (initial) converstion position
-    bool ConvPosSet;
-    TVector3 PosMax;
-    Double_t EdepMax;
+    Int_t PDG;
+    Double_t ePrimary;
+    Double_t eCharged;
+    Double_t eNeutral;
+    Double_t eOptical;
+    Double_t ePmt;
+    Double_t eMaxDeposit;
+
+    bool hasConversion;//true (initial) converstion position
+    TVector3 positionEWeight;
+    TVector3 positionConversion;
+    TVector3 positionMax;
 
  		
 ClassDef(LTEvent,1)

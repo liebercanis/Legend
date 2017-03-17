@@ -54,7 +54,8 @@ class LegendTrackingAction : public G4UserTrackingAction {
     TH1F *hAbsorbedPhotonE;
     TH1F *hWLSPhotonE;
     TH1F *hPMTPhotonE;
-    TH1F* hTrackStatus;
+    TH1F *hCherenkovPhotonE;
+    TH1F *hTrackStatus;
   private:
   
  

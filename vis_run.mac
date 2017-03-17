@@ -55,5 +55,8 @@
 /Legend/eventVerbose 1
 #/Legend/forceDrawPhotons true #do not need, done in LegendTrackingAction.cc
 /vis/ogl/set/displayListLimit 10000
-/run/beamOn 1
+/gun/particle gamma 
+/gun/energy 0.001 GeV
+/run/beamOn 10
 /vis/scene/endOfEventAction accumulate 10
+#/vis/viewer/save

@@ -1,86 +1,69 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-// $Id: LegendPMTSD.hh 73915 2013-09-17 07:32:26Z gcosmo $
-//
-/// \file optical/Legend/include/LegendPMTSD.hh
-/// \brief Definition of the LegendPMTSD class
-//
-//
+//---------------------------------------------------------------------------//
+//bb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nu//
+//                                                                           //
+//                            MaGe Simulation                                //
+//                                                                           //
+//      This code implementation is the intellectual property of the         //
+//      MAJORANA and Gerda Collaborations. It is based on Geant4, an         //
+//      intellectual property of the RD44 GEANT4 collaboration.              //
+//                                                                           //
+//                        *********************                              //
+//                                                                           //
+//    Neither the authors of this software system, nor their employing       //
+//    institutes, nor the agencies providing financial support for this      //
+//    work  make  any representation or  warranty, express or implied,       //
+//    regarding this software system or assume any liability for its use.    //
+//    By copying, distributing or modifying the Program (or any work based   //
+//    on on the Program) you indicate your acceptance of this statement,     //
+//    and all its terms.                                                     //
+//                                                                           //
+//bb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nubb0nu//
+//---------------------------------------------------------------------------//
+/**
+ * CLASS DECLARATION:  LegendPMTSD.hh
+ *
+ * DESCRIPTION:
+ *
+ * AUTHOR:
+ *
+ * REVISION: MM-DD-YYYY
+ *
+ */
+
 #ifndef LegendPMTSD_h
 #define LegendPMTSD_h 1
 
-#include "G4DataVector.hh"
+// ---------------------------------------------------------------------------
+
+#include "LegendPMTSDHit.hh"
 #include "G4VSensitiveDetector.hh"
-#include "LegendPMTHit.hh"
-
-#include <vector>
-
-class G4Step;
-class G4HCofThisEvent;
+#include "G4Step.hh"
 
 class LegendPMTSD : public G4VSensitiveDetector
 {
 
-  public:
+public:
+  LegendPMTSD(G4String name, G4int nCells, G4String colName);
+  ~LegendPMTSD();
 
-    LegendPMTSD(G4String name);
-    virtual ~LegendPMTSD();
- 
-    virtual void Initialize(G4HCofThisEvent* );
-    virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* );
- 
-    //A version of processHits that keeps aStep constant
-    G4bool ProcessHits_constStep(const G4Step* ,
-                                 G4TouchableHistory* );
-    virtual void EndOfEvent(G4HCofThisEvent* );
-    virtual void clear();
-    void DrawAll();
-    void PrintAll();
- 
-    //Initialize the arrays to store pmt possitions
-    inline void InitPMTs(G4int nPMTs){
-      if(fPMTPositionsX)delete fPMTPositionsX;
-      if(fPMTPositionsY)delete fPMTPositionsY;
-      if(fPMTPositionsZ)delete fPMTPositionsZ;
-      fPMTPositionsX=new G4DataVector(nPMTs);
-      fPMTPositionsY=new G4DataVector(nPMTs);
-      fPMTPositionsZ=new G4DataVector(nPMTs);
-    }
+  void Initialize(G4HCofThisEvent*HCE);
+  G4bool ProcessHits(G4Step*aStep,G4TouchableHistory* );
+  // -- NB: Overloaded version to be used with the LAr Instrumentation.
+  // It is manually called from the process manager.
+  G4bool ProcessHits_constStep(const G4Step* aStep, G4TouchableHistory* );
+  void EndOfEvent(G4HCofThisEvent*HCE);
+  void clear();
+  void DrawAll();
+  void PrintAll();
 
-    //Store a pmt position
-    void SetPmtPositions(const std::vector<G4ThreeVector>& positions);
-    void SetPmtPosition(G4ThreeVector positions);
+private:
+  LegendPMTSDHitsCollection *PMTCollection;
+  int* CellID;
+  int numberOfCells;
+  int HCID;
+  G4double TimeInit;
 
-  private:
-
-    LegendPMTHitsCollection* fPMTHitCollection;
-
-    G4DataVector* fPMTPositionsX;
-    G4DataVector* fPMTPositionsY;
-    G4DataVector* fPMTPositionsZ;
 };
 
 #endif
+

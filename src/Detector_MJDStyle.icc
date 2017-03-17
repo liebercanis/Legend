@@ -4,7 +4,7 @@
 	G4double copperShield_RMax[6] = {1.10*m,1.10*m,1.10*m,1.10*m,1.10*m,1.10*m};
 
 	G4Polycone* solid_copperShield = new G4Polycone("sol_copperShield", 0, 2*M_PI,6,copperShield_Z,copperShield_RMin,copperShield_RMax);
-	G4LogicalVolume* logical_copperShield = new G4LogicalVolume(solid_copperShield, mat_Cu, "log_copperShield" );
+	G4LogicalVolume* logical_copperShield = new G4LogicalVolume(solid_copperShield, G4Material::GetMaterial("MetalCopper"), "log_copperShield" );
 	logical_copperShield->SetVisAttributes ( new G4VisAttributes(G4Colour(1.0, 0.1, 0.1,0.1) ));
 	G4VPhysicalVolume* physical_copperShield =
 		new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_copperShield,"phy_copperShield",logical_World,false,0,checkOverlaps);
@@ -15,7 +15,7 @@
 	G4double waterShield_RMax[6] = {6.5*m,6.5*m,6.5*m,6.5*m,6.5*m,6.5*m};
 
 	G4Polycone* solid_waterShield = new G4Polycone("sol_waterShield", 0, 2*M_PI,6,waterShield_Z,waterShield_RMin,waterShield_RMax);
-	G4LogicalVolume* logical_waterShield = new G4LogicalVolume(solid_waterShield, mat_Water, "log_waterShield" );
+	G4LogicalVolume* logical_waterShield = new G4LogicalVolume(solid_waterShield, water, "log_waterShield" );
 	logical_waterShield->SetVisAttributes ( new G4VisAttributes(G4Colour(0.3, 0.6, 1.0,0.2) ));
 	G4VPhysicalVolume* physical_waterShield =
 		new G4PVPlacement(0,G4ThreeVector(0,0,0),logical_waterShield,"phy_waterShield",logical_World,false,0,checkOverlaps);

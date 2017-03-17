@@ -60,6 +60,7 @@ LegendTrackingAction::LegendTrackingAction(LegendRecorderBase* r)
   hAbsorbedPhotonE = new TH1F("AbsorbedPhotonE"," absorbed scint photon energy in LAr",1000,LowE,HighE);
   hWLSPhotonE = new TH1F("WLSPhotonE"," WLS photon energy ",1000,LowWLS,HighWLS);
   hPMTPhotonE = new TH1F("PMTPhotonE"," WLS photon energy ",1000,LowWLS,HighWLS);
+  hCherenkovPhotonE  = new TH1F("CherenkovPhotonE"," WLS photon energy ",1000,LowWLS,HighWLS);
   hTrackStatus = new TH1F("TrackStatus"," track status ",7,0,7);
   
   G4cout << " ...  = " << G4endl;
@@ -100,7 +101,7 @@ void LegendTrackingAction::PostUserTrackingAction(const G4Track* aTrack){
   
   const G4VProcess* creator=aTrack->GetCreatorProcess();
   if(!creator) { 
-    G4cout << " WARNING LegendTrackingAction called with NULL creator!  energy = " << totE << G4endl;
+    G4cout << " WARNING LegendTrackingAction called with NULL track G4VProcess!  energy = " << totE << G4endl;
     return;
   }
 
@@ -113,7 +114,7 @@ void LegendTrackingAction::PostUserTrackingAction(const G4Track* aTrack){
     else if(trackInformation->GetTrackStatus()&hitPMT) hTrackStatus->Fill(1); 
     else if(trackInformation->GetTrackStatus()&absorbed) hTrackStatus->Fill(2); 
     else if(trackInformation->GetTrackStatus()&boundaryAbsorbed) hTrackStatus->Fill(3); 
-    else if(trackInformation->GetTrackStatus()&hitSphere) hTrackStatus->Fill(4); 
+    else if(trackInformation->GetTrackStatus()&absorbedLAr) hTrackStatus->Fill(4); 
     else if(trackInformation->GetTrackStatus()&inactive) hTrackStatus->Fill(5); 
     else  hTrackStatus->Fill(6); 
     
@@ -133,7 +134,8 @@ void LegendTrackingAction::PostUserTrackingAction(const G4Track* aTrack){
     } else if(creator->GetProcessName() ==  "OpWLS"){
       hWLSPhotonE->Fill(totE);
       //trajectory->SetDrawTrajectory(true);
-    } else               
-      G4cout << " UNKNOWN optical photon creator  " << creator->GetProcessName()<< " definition  " << aTrack->GetDefinition() << " ???? " << G4endl;
+    } else if(creator->GetProcessName() == "Cerenkov") {
+      hCherenkovPhotonE->Fill(totE);
+    } else G4cout << " UNKNOWN optical photon creator  " << creator->GetProcessName()<< " definition  " << aTrack->GetDefinition() << " ???? " << G4endl;
   }
 }

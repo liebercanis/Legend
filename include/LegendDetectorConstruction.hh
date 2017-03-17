@@ -18,8 +18,6 @@
 #ifndef LegendDetectorConstruction_h
 #define LegendDetectorConstruction_h 1
 
-#include "G4NistManager.hh"
-
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4VUserDetectorConstruction.hh"
@@ -45,10 +43,22 @@
 #include "G4Torus.hh"
 #include "G4UnionSolid.hh"
 
+#include "G4VisAttributes.hh"
+#include "G4Colour.hh"
+
+#include "G4SDManager.hh"
+#include "G4RunManager.hh"
+
+#include "G4NistManager.hh"
 #include "G4LogicalSkinSurface.hh"
 #include "G4LogicalBorderSurface.hh"
 #include "G4OpticalSurface.hh"
-#include "G4VisAttributes.hh"
+
+#include "G4Isotope.hh"
+#include "G4Element.hh"
+#include "G4Material.hh"
+#include "G4MaterialPropertiesTable.hh"
+#include "G4MaterialPropertyVector.hh"
 
 #include "LegendDetectorMessenger.hh"
 #include "LegendScintSD.hh"
@@ -57,6 +67,7 @@
 
 // -- ROOT include
 #include "TGraph.h"
+#include "TFile.h"
 
 
 class G4VPhysicalVolume;
@@ -81,6 +92,8 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
 		G4LogicalVolume* GetLogPhotoCath() {return logical_Photocath;}
 		G4LogicalVolume* GetLogScint()     {return logical_fillGas;}
     
+    void PlacePMT(G4double x,G4double y,G4double z,double top_or_bot,int num);    
+    
     //LAr Construction Fucntions
     void ArgonOpticalProperties();
     G4double LArEpsilon(const G4double lambda);
@@ -88,34 +101,43 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4double LArRayLength(const G4double lambda,const G4double temp);
     G4double ArScintillationSpectrum(const G4double kk);
 
-    //void Skin_Builder();//this was a dumb function and if you liked it, you are dumb too
-    // LegendDetectorConstruction constant LambdaE =1.23984e-09
     G4double TPBEmissionSpectrum(G4double energy) { 
       G4double wavelength = LambdaE/energy/nm;
       G4double eff=0;
       if(wavelength>350.0 && wavelength < 650.0) eff =fTPBspec->Eval(wavelength);
-      //if (eff < 0.2) eff = 0.2;
-      //G4cout<<" TPBemission energy =" << energy << " nm " << nm  << " 
-      //  << wavelength (nm)  " << wavelength << " eff= "  << eff << G4endl;
-      //MGLog(routine) << "Eval ("<< targetf/nm<< ")yielded a value of " << eff << endlog;
       return eff;
     }
 
-    G4double getWavelength(G4double energy) {
-        return LambdaE/energy/nm;
-    }
     TDirectory *fDir;
     TH1F *hDetecWLSPhotonE;
+    TH1F* hDetecWLSPhotonWavelength;
+
   private:
+    /// PMTs + WLS coating
+    G4double innerR_cryo;
+    G4double thickness_WLS;  
+    G4double PMTHousing_Thickness; 
+    G4double PMTGlass_Thickness;
+    G4double PMT_Radius;
+    G4double PMT_Height;
+    G4double startAngle_pmt;
+    G4double spanningAngle_pmt;
+
     static const G4double LambdaE;
+    int numPMT = 0;
+    std::vector<G4LogicalVolume*> pmtVector;
+    std::vector<G4String> pmtName;
+    std::vector<G4int> pmtInstance;
     TFile *tpbFile;
+    TFile *fVM2000File;
     TGraph *fTPBspec;
+    TGraph *fVM2000spec;
     LegendDetectorMessenger* detectorMessenger;  // pointer to the Messenger
 		G4bool checkOverlaps;
 		G4String detector_type;
 		G4String innerVessel_FillMaterial;
-		//#include "fTPBspec.ihh"
-		//Basic volumes
+		
+    //Basic volumes
 		G4Tubs* solid_Pmt;
 		G4Tubs* solid_Photocath;		
     G4Box* solid_World;
@@ -123,17 +145,9 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4Box* solid_Lab;
     G4Tubs* solid_DetGeCrystal;
     G4Polycone* solid_innerVessel; 
-    //G4Polycone* solid_fillGas; 
     G4Tubs* solid_fillGas;
-
-    //G4Materials...G4Elements
-    G4Material* fPstyrene;
-    G4Element* fC;
-    G4Element* fH;
-    G4Material* fGlass;
-    G4Material* fAl;
-    G4Element* fN;
-    G4Element* fO;
+    
+    //Materials...most are found in materials files
     G4Material* mat_fillGas;
     G4Material*  fTPB;
     G4MaterialPropertiesTable *tpbTable;
@@ -153,9 +167,14 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4LogicalVolume* logical_Rock;
     G4LogicalVolume* logical_DetGeCrystal;
     G4LogicalVolume* logical_innerVessel;
-    G4LogicalVolume* logical_wls;
+    G4LogicalVolume* logical_wlsCylinder;
+    G4LogicalVolume* logical_wlsDisk;
+    G4LogicalVolume* logical_VM2000Cylinder;
+    G4LogicalVolume* logical_PMTGlassWLS;
+    G4LogicalVolume* logical_PMTGlass; //use this for Sensitive Detector
+    G4LogicalVolume* logical_PMTHousing;
 
-    //Physical Volume
+    //Physical Volume: Get Physical
     G4VPhysicalVolume* physical_Rock;
     G4VPhysicalVolume* physical_World;
     G4VPhysicalVolume* physical_innerVessel;
@@ -163,24 +182,22 @@ class LegendDetectorConstruction : public G4VUserDetectorConstruction
     G4VPhysicalVolume* physical_Photocath;
     G4VPhysicalVolume* physical_ScintSlab;
     G4VPhysicalVolume* physical_fillGas;
-    G4LogicalSkinSurface*  skin_copper;
-    G4LogicalSkinSurface*  skin_photocath;
+    G4VPhysicalVolume* physical_wlsCylinder;
+    G4VPhysicalVolume* physical_wlsDiskTop;
+    G4VPhysicalVolume* physical_wlsDiskBottom;
+    
+    //Surface Objects
+    G4LogicalSkinSurface *  skin_copper;
+    G4LogicalSkinSurface *  skin_photocath;
     G4LogicalSkinSurface* fSkin_WLS;
     G4OpticalSurface* fWLSoptSurf;
     G4OpticalSurface* fPMTGlassOptSurface;
-    G4PVPlacement *physical_wls;
-
-    // boarders
-    G4LogicalBorderSurface* wls_LogicalInnerSuface;
-    G4LogicalBorderSurface* wls_LogicalOuterSurface;
-    
-    //Sensitive Detectors
-		G4Cache<LegendScintSD*> Scint_SD;
-    G4Cache<LegendPMTSD*> Pmt_SD;
-
-   
-		//Main volume class object->idk what these are called :)
-		LegendDetectorConstruction * fMainVolume;
+    G4LogicalBorderSurface * wlsCylinder_LogicalInnerSuface ;
+    G4LogicalBorderSurface * wlsCylinder_LogicalOuterSurface ;
+    G4LogicalBorderSurface * wlsDiskTop_LogicalInnerSuface ;
+    G4LogicalBorderSurface * wlsDiskTop_LogicalOuterSurface ;
+    G4LogicalBorderSurface * wlsDiskBottom_LogicalInnerSuface ;
+    G4LogicalBorderSurface * wlsDiskBottom_LogicalOuterSurface ;
 
     G4MaterialPropertiesTable* fMPTPStyrene;
 };

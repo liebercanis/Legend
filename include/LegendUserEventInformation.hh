@@ -45,6 +45,7 @@ class LegendUserEventInformation : public G4VUserEventInformation
 
     inline virtual void Print()const{};
 
+    void IncPhotonCount_Escape(){fPhotonCount_Escape++;}
     void IncPhotonCount_Scint(){fPhotonCount_Scint++;}
     void IncPhotonCount_Ceren(){fPhotonCount_Ceren++;}
     void IncEDep(G4double dep){fTotE+=dep;}
@@ -57,6 +58,7 @@ class LegendUserEventInformation : public G4VUserEventInformation
     void SetConvPos(const G4ThreeVector& p){fConvPos=p;fConvPosSet=true;}
     void SetPosMax(const G4ThreeVector& p,G4double edep){fPosMax=p;fEdepMax=edep;}
 
+    G4int GetPhotonCount_Escape()const {return fPhotonCount_Escape;}
     G4int GetPhotonCount_Scint()const {return fPhotonCount_Scint;}
     G4int GetPhotonCount_Ceren()const {return fPhotonCount_Ceren;}
     G4int GetHitCount()const {return fHitCount;}
@@ -84,6 +86,7 @@ class LegendUserEventInformation : public G4VUserEventInformation
     G4int fPhotonCount_Ceren;
     G4int fAbsorptionCount;
     G4int fBoundaryAbsorptionCount;
+    G4int fPhotonCount_Escape;
 
     G4double fTotE;
 

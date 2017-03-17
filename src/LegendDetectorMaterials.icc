@@ -1,45 +1,622 @@
 	////////////////////////////////////////////////////////////////////////////////////////
-	// Get nist material manager
-  G4NistManager* nist = G4NistManager::Instance();
-  // Option to switch on/off checking of volumes overlaps
- // G4double LAr_Energy[7]= { 8.906 ,  9.161 ,  9.415 ,  9.670 ,  9.925 ,  10.180 ,  10.435};
+
+  //here one should define the material he/she wants to use 
+  //Please look for your material in the comments list
+  //Items are commented out to save run when Geant4 is loading Physics Tables
+  G4double a;  // atomic mass
+  G4double z;  // atomic number
+  G4double density,fractionmass,abundance;
+  G4int iz,in;
+  G4String name,symbol;
+  G4int ncomponents;
+  G4int natoms;
+  G4double temperature, pressure;
+  G4State  state;
+/////////////////**************///////////////////
+/////////////////Gerda Elements?//////////////////
+  G4Element* elH = new G4Element
+    (name="Hydrogen",symbol="H",z=1.,a=1.00794*g/mole);
+//  G4Element* elLi = new G4Element
+ //   (name="Lithium",symbol="Li",z=3.,a=6.941*g/mole);
+//  G4Element* elBe = new G4Element
+ //   (name="Beryllium",symbol="Be",z=4.,a=9.012*g/mole);
+//  G4Element* elB = new G4Element
+ //   (name="Boron",symbol="B",z=5.,a=10.811*g/mole);
+  G4Element* elC = new G4Element
+    (name="Carbon",symbol="C",z=6.,a=12.011*g/mole);
+  G4Element* elN = new G4Element 
+    (name="Nitrogen",symbol="N",z=7.,a=14.01*g/mole);
+  G4Element* elO = new G4Element
+    (name="Oxygen",symbol="O",z=8.,a=16.00*g/mole);
+//  G4Element* elF = new G4Element
+ //   (name="Fluorine",symbol="F",z=9.,a=19.00*g/mole);
+//  G4Element* elNa =  new G4Element
+  //   (name="Natrium",symbol="Na",z=11.,a=22.990*g/mole);
+  G4Element* elAl = new G4Element
+    (name="Aluminum" ,symbol="Al",z=13.,a=26.98*g/mole);
+  G4Element* elSi = new G4Element
+    (name="Silicon",symbol="Si",z=14.,a=28.09*g/mole);
+//  G4Element* elS = new G4Element
+  //   (name="Sulfur",symbol="S",z=16.,a=32.066*g/mole);
+//  G4Element* elCl = new G4Element
+  //   (name="Chlorine",symbol="Cl",z=17.,a=35.45*g/mole);
+  G4Element* elAr = new G4Element 
+    (name="Argon",symbol="Ar",z=18.,a=39.95*g/mole);
+  G4Element* elK = new G4Element
+    (name="Potassium",symbol="K",z=19.,a=39.098*g/mole);
+  G4Element* elCa = new G4Element
+    (name="Calcium",symbol="Ca",z=20.,a=40.078*g/mole);
+//  G4Element* elTi = new G4Element
+ //   (name="Titanium",symbol="Ti",z=22.,a=47.867*g/mole);
+//  G4Element* elCr = new G4Element
+ //   (name="Chromium",symbol="Cr",z=24.,a=51.9961*g/mole);
+  G4Element* elMn = new G4Element
+    (name="Manganese",symbol="Mn",z=25.,a=54.93805*g/mole);
+  G4Element* elFe = new G4Element
+    (name="Iron",symbol="Fe",z=26.,a=55.845*g/mole);
+//  G4Element* elIn = new G4Element
+ //   (name="Indium",symbol="In",z=49.,a=114.82*g/mole);
+  G4Element* elCo = new G4Element
+     (name="Cobalt",symbol="Co",z=27.,a=58.9332*g/mole);
+  G4Element* elNi = new G4Element
+    (name="Nickel",symbol="Ni",z=28.,a=58.6934*g/mole);
+//  G4Element* elNb = new G4Element
+ //   (name="Niobium",symbol="Nb",z=41.,a=92.91*g/mole);
+  G4Element* elCu = new G4Element
+    (name="Copper",symbol="Cu",z=29.,a=63.55*g/mole);
+
+     /*
+//  G4Element* elKr = new G4Element
+ //   (name="Krypton",symbol="Kr",z=36.,a=83.798*g/mole);
+//  G4Element* elEr = new G4Element
+ //   (name="Erbium",symbol="Er",z=68.,a=167.26*g/mole);
+  */
+  G4Element* elPb = new G4Element
+    (name="Lead",symbol="Pb",z=82.,a=207.2*g/mole);
+//  G4Element* elAu = new G4Element
+ //   (name="Gold", symbol="Au", z=79, a=196.97*g/mole); 
+//  G4Element* elAg = new G4Element
+ //   (name="Silver", symbol="Ag", z=47, a=107.87*g/mole); 
+//  G4Element* elW = new G4Element
+ //   (name="Tungsten", symbol="W", z=74, a=182.30*g/mole); 
+//  G4Element* elZn = new G4Element
+ //   (name="Zinc", symbol="Zn", z=30.,a=65.38*g/mole);
+//  G4Element* elSn = new G4Element
+ //   (name="Tin", symbol="Sn", z=50.,a=118.71*g/mole);
+//  G4Element* elTa = new G4Element
+ //   (name="Tantalum", symbol="Ta", z= 73, a=180.94*g/mole);
+//  G4Element* elTe = new G4Element
+ //   (name="Tellurium",symbol="Te",z=52,a=127.60*g/mole);
+  G4Element* elTh = new G4Element
+    (name="Thorium",symbol="Th",z=80,a=232.037*g/mole);
+  G4Element* elUr = new G4Element
+    (name="Uranium",symbol="Ur",z=92,a=238.0289*g/mole);
+  //G4Element* elAm = new G4Element
+    //(name="Americium",symbol="Am",z=95,a=241.06*g/mole);
   
+    
+  
+//  G4Isotope* Ga69 = new G4Isotope(name="Gallium69",iz= 31,in=69,a=69*g/mole);
+//  G4Isotope* Ga71 = new G4Isotope(name="Gallium71",iz=31,in=71,a=71*g/mole);
+//  G4Element* elGa = new G4Element
+     //   (name="Gallium",symbol="Ga",ncomponents=2);
+//  elGa->AddIsotope(Ga69, abundance=0.61);
+//  elGa->AddIsotope(Ga71, abundance=0.39);
+/*
+  G4Isotope* Ge70 = new G4Isotope(name="Ge70",  32, 70, 69.92*g/mole);
+  G4Isotope* Ge72 = new G4Isotope(name="Ge72",  32, 72, 71.92*g/mole);
+  G4Isotope* Ge73 = new G4Isotope(name="Ge73",  32, 73, 73.0*g/mole);
+  G4Isotope* Ge74 = new G4Isotope(name="Ge74",  32, 74, 74.0*g/mole);
+  G4Isotope* Ge76 = new G4Isotope(name="Ge76",  32, 76, 76.0*g/mole);
+*/
+  a = 75.71*g/mole;
+  G4int nIsotopes=5;
+//  G4Element* elGeNat=new G4Element
+//    (name="naturalGermanium",symbol="GeNat",nIsotopes);
+  /*
+  elGeNat->AddIsotope(Ge70,abundance= 20.9*perCent);
+  elGeNat->AddIsotope(Ge72,abundance= 27.5*perCent);
+  elGeNat->AddIsotope(Ge73,abundance= 7.7*perCent);
+  elGeNat->AddIsotope(Ge74,abundance= 36.3*perCent);
+  elGeNat->AddIsotope(Ge76,abundance= 7.6*perCent);
+*/
+
+//  G4Element* elGeEnr = new G4Element
+//  ( name="enrichedGermanium",symbol="GeEnr",nIsotopes);
+  /*
+  elGeEnr->AddIsotope(Ge70,abundance= 0.0*perCent);
+  elGeEnr->AddIsotope(Ge72,abundance= 0.1*perCent);
+  elGeEnr->AddIsotope(Ge73,abundance= 0.2*perCent);
+  elGeEnr->AddIsotope(Ge74,abundance= 13.1*perCent);
+  elGeEnr->AddIsotope(Ge76,abundance= 86.6*perCent);
+  */
+
+//////////***************///////////////////
+//////////Gerda Materials///////////////////
+  //
+  //
+  //Glass
+  G4Material* fGlass = new G4Material("Glass", 1.032*g/cm3,2);
+  fGlass->AddElement(elC,91.533*perCent);
+  fGlass->AddElement(elH,8.467*perCent);
+ 	
+  //Get instance of NIST for vacuum and air
+  G4NistManager* nist = G4NistManager::Instance();
+
   G4Material* mat_vacuum = nist->FindOrBuildMaterial("G4_Galactic");//
   G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
-  G4Material* mat_GeNat = nist->FindOrBuildMaterial("G4_Ge");
-	G4Material* mat_Cu = nist->FindOrBuildMaterial("G4_Cu");
-	G4Material* mat_Pb = nist->FindOrBuildMaterial("G4_Pb");
-	G4Material* mat_N = nist->FindOrBuildMaterial("G4_N");
-	G4Material* mat_Ar = nist->FindOrBuildMaterial("G4_Ar");
-	G4Material* mat_Water = nist->FindOrBuildMaterial("G4_WATER");
-  G4Material* mat_Silicon = nist->FindOrBuildMaterial("G4_Si");
-  G4Material* mat_Oxygen = nist->FindOrBuildMaterial("G4_O");
-  G4Material* mat_Uranium = nist->FindOrBuildMaterial("G4_U");
-  G4Material* mat_Thorium = nist->FindOrBuildMaterial("G4_Th");
-  G4Material* mat_Potassium = nist->FindOrBuildMaterial("G4_K");
-  
-  double z,a,density;
-  
-  //Glass
-  fH = new G4Element("H", "H", z=1., a=1.01*g/mole);
-  fC = new G4Element("C", "C", z=6., a=12.01*g/mole);
-  fN = new G4Element("N", "N", z=7., a= 14.01*g/mole);
-  fO = new G4Element("O"  , "O", z=8., a= 16.00*g/mole);
+ 
+  //concrete
+  G4Material* concrete = new G4Material
+    (name="Concrete",density=2.3*g/cm3,ncomponents=6);
+  concrete->AddElement(elSi,fractionmass= 0.227915);
+  concrete->AddElement(elO,fractionmass= 0.60541);
+  concrete->AddElement(elH,fractionmass= 0.09972);
+  concrete->AddElement(elCa,fractionmass= 0.04986);
+  concrete->AddElement(elAl,fractionmass= 0.014245);
+  concrete->AddElement(elFe,fractionmass= 0.00285);
+  /*
+  //stainless steel
+  G4Material* ssteel = new G4Material
+    (name="Steel",density=7.9*g/cm3,ncomponents=5);
+  ssteel->AddElement(elSi,fractionmass= 0.01);
+  ssteel->AddElement(elCr,fractionmass= 0.20);
+  ssteel->AddElement(elMn,fractionmass= 0.02);
+  ssteel->AddElement(elFe,fractionmass= 0.67);
+  ssteel->AddElement(elNi,fractionmass= 0.10);
 
-  fGlass = new G4Material("Glass", 1.032*g/cm3,2);
-  fGlass->AddElement(fC,91.533*perCent);
-  fGlass->AddElement(fH,8.467*perCent);
+  //old ship steel
+  G4Material* shipsteel = new G4Material
+    (name="ShipSteel",density=7.9*g/cm3,ncomponents=3);
+  shipsteel->AddElement(elCr,fractionmass= 0.02);
+  shipsteel->AddElement(elFe,fractionmass= 0.94);
+  shipsteel->AddElement(elNi,fractionmass= 0.04);
+  */
+    //Kovar
+  G4Material* kovar = new G4Material
+    (name="Kovar",density=8.0*g/cm3,ncomponents=6);
+  kovar->AddElement(elC,fractionmass= 0.0001);
+  kovar->AddElement(elSi,fractionmass= 0.002);
+  kovar->AddElement(elMn,fractionmass= 0.003);
+  kovar->AddElement(elCo,fractionmass= 0.17);
+  kovar->AddElement(elNi,fractionmass= 0.29);
+  kovar->AddElement(elFe,fractionmass= 0.5349);
   
-  //the glass properties must be improved, para are guessed atm
- /* G4double glass_RIND[]={1.56,1.57,1.58,1.59,1.60,1.61,1.62};
-  assert(sizeof(glass_RIND) == sizeof(LAr_Energy));
-  G4double glass_AbsLength[]={420.*cm,420.*cm,420.*cm,420.*cm,420.*cm,420.*cm,420.*cm};
-  assert(sizeof(glass_AbsLength) == sizeof(LAr_Energy));
-  G4MaterialPropertiesTable *glass_mt = new G4MaterialPropertiesTable();
-  glass_mt->AddProperty("ABSLENGTH",LAr_Energy,glass_AbsLength,7);
-  glass_mt->AddProperty("RINDEX",LAr_Energy,glass_RIND,7);
-  fGlass->SetMaterialPropertiesTable(glass_mt);*/
-  /// Optical properties of the PMT glass: 
+  //  VM2000
+  G4Material* VM2000 = new G4Material(name="VM2000", density=0.9*g/cm3, ncomponents=2);
+  VM2000->AddElement(elC, 2);
+  VM2000->AddElement(elH, 4);
+  
+  // liquid N2
+  density=0.808*g/cm3;
+  ncomponents=1;
+  natoms=1;
+  state=kStateLiquid;
+  temperature=77.0*kelvin;
+  pressure=1.0*bar;
+  name="LiquidNitrogen";
+  G4Material* liquidnitrogen = new G4Material(name,density,ncomponents,
+					      state,temperature,pressure);
+  liquidnitrogen->AddElement(elN,natoms);
+
+  // gaseous N2 (pressure) 
+  density=4.614*mg/cm3; 
+  ncomponents=1;
+  natoms=1;
+  state=kStateGas;
+  temperature=77.0*kelvin;
+  pressure=1.0*bar;
+  name="GaseousNitrogen";
+  G4Material* gaseousnitrogen = new G4Material(name,density,ncomponents,
+					       state,temperature,pressure);
+  gaseousnitrogen->AddElement(elN,natoms);
+/*
+  // natural germanium
+  density = 5.32*g/cm3;
+  G4Material* natGe = new G4Material(name="NaturalGe", density, 1);
+  natGe->AddElement(elGeNat,natoms=1);
+
+  // enriched germanium
+  density = 5.54*g/cm3;
+  G4Material* enrGe = new G4Material(name="EnrichedGe", density, 1);
+  enrGe->AddElement(elGeEnr,natoms=1);
+*/ 
+  // copper
+  G4Material* metalCu = new G4Material
+    (name="MetalCopper",density=8.960*g/cm3,ncomponents=1);
+  metalCu->AddElement(elCu,natoms=1);
+  /*
+  // Niobium
+  G4Material* metalNb = new G4Material
+ //   (name="MetalNiobium",density=8.57*g/cm3,ncomponents=1);
+  metalNb->AddElement(elNb,natoms=1);
+ */ 
+  //water
+  G4Material* water = new G4Material
+    (name="Water", density=1.00*g/cm3, ncomponents=2);
+  water->AddElement(elH,natoms=2);
+  water->AddElement(elO,natoms=1);
+  /*
+  // lead
+  G4Material* metalPb = new G4Material
+    (name="MetalLead", density=11.340*g/cm3, ncomponents=1);
+  metalPb->AddElement(elPb,natoms=1);
+
+ // tungsten
+  G4Material* metalW = new G4Material
+    (name="MetalTungsten", density=19.250*g/cm3, ncomponents=1);
+  metalW->AddElement(elW,natoms=1);
+
+  // tantalum
+  G4Material* metalTa = new G4Material
+    (name="MetalTantalum", density=16.69*g/cm3, ncomponents=1);
+  metalTa->AddElement(elTa,natoms=1);
+*/
+  //aluminium
+  G4Material* metalAl = new G4Material
+    (name="MetalAluminium", density=2.702*g/cm3, ncomponents=1);
+  metalAl->AddElement(elAl,natoms=1);
+/*
+  //iron
+  G4Material* metalFe = new G4Material
+    (name="MetalIron", density=7.874*g/cm3, ncomponents=1);
+  metalFe->AddElement(elFe,natoms=1);
+
+  //silicon
+  G4Material* metalSi = new G4Material
+ //   (name="MetalSilicon", density=2.330*g/cm3, ncomponents=1);
+  metalSi->AddElement(elSi,natoms=1);
+
+  // teflon (PTFE)
+  G4Material* teflon = new G4Material
+ //   (name="Teflon", density=2.165*g/cm3, ncomponents=2);
+  teflon->AddElement(elF,fractionmass= 0.76);
+  teflon->AddElement(elC,fractionmass= 0.24);
+  
+  // tefzel (ETFE)
+  G4Material* tefzel = new G4Material
+ //   (name="Tefzel", density=1.70*g/cm3, ncomponents=3);
+  tefzel->AddElement(elH,fractionmass= 0.031);
+  tefzel->AddElement(elF,fractionmass= 0.594);
+  tefzel->AddElement(elC,fractionmass= 0.375);
+
+  // vespel
+  G4Material* vespel = new G4Material
+ //   (name="Vespel", density=1.430*g/cm3, ncomponents=2);
+  vespel->AddElement(elH,fractionmass= 6.7*perCent);
+  vespel->AddElement(elN,fractionmass= 93.3*perCent);
+
+  // nylon
+  density = 1.15*g/cm3;  //  http://www.boedeker.com
+  G4Material* nylon = new G4Material
+ //   (name="Nylon", density=1.15*g/cm3, ncomponents=4);
+  nylon->AddElement(elH,fractionmass= 10.0*perCent);
+  nylon->AddElement(elN,fractionmass= 10.0*perCent);
+  nylon->AddElement(elO,fractionmass= 15.0*perCent);
+  nylon->AddElement(elC,fractionmass= 65.0*perCent);
+
+  // Parylene C (white powder)
+  density = 0.590*g/cm3;  
+  G4Material* parylenec = new G4Material
+ //   (name="ParyleneC", density=0.590*g/cm3, ncomponents=3);
+  parylenec->AddElement(elH,fractionmass= 5.09*perCent);
+  parylenec->AddElement(elCl,fractionmass= 25.58*perCent);
+  parylenec->AddElement(elC,fractionmass= 69.33*perCent);
+
+  //boron-ethanolamine
+  G4Material* borEtha = new G4Material
+ //   (name="BoronEthanolamine", density=1.435*g/cm3, ncomponents=5);
+  borEtha->AddElement(elH,fractionmass= 12.4*perCent);
+  borEtha->AddElement(elC,fractionmass= 31.3*perCent);
+  borEtha->AddElement(elB,fractionmass= 11.8*perCent);
+  borEtha->AddElement(elN,fractionmass= 18.3*perCent);
+  borEtha->AddElement(elO,fractionmass= 26.1*perCent);
+
+  //boron-polyethylen
+  G4Material* borPoly = new G4Material
+ //   (name="BoronPolyethylene", density=0.942*g/cm3, ncomponents=3);
+  borPoly->AddElement(elH,fractionmass= 11.5*perCent);
+  borPoly->AddElement(elC,fractionmass= 73.5*perCent);
+  borPoly->AddElement(elB,fractionmass= 15.0*perCent);
+	
+  //boron-polyethylene 5%-B by mass
+  G4Material* borPoly5 = new G4Material
+   (name="BoronPolyethylene5", density=0.94*g/cm3, ncomponents=3);
+  borPoly5->AddElement(elH,fractionmass= 13.5*perCent);
+  borPoly5->AddElement(elC,fractionmass= 81.5*perCent);
+  borPoly5->AddElement(elB,fractionmass= 5.0*perCent);	
+
+  //boron-polyethylene 10%-B by mass
+  G4Material* borPoly10 = new G4Material
+	(name="BoronPolyethylene10", density=0.94*g/cm3, ncomponents=3);
+  borPoly10->AddElement(elH,fractionmass= 12.8*perCent);
+  borPoly10->AddElement(elC,fractionmass= 77.2*perCent);
+  borPoly10->AddElement(elB,fractionmass= 10.0*perCent);	
+
+  //lithium-polyethylene 7.5%-Li by mass
+  G4Material* LiPoly = new G4Material
+  (name="LithiumPolyethylene", density=1.06*g/cm3, ncomponents=3);
+  LiPoly->AddElement(elH,fractionmass= 13.2*perCent);
+  LiPoly->AddElement(elC,fractionmass= 79.3*perCent);
+  LiPoly->AddElement(elLi,fractionmass= 7.5*perCent);	
+	
+  // styropor
+  G4Material* styropor = new G4Material
+    (name="Styropor", density=20*kg/m3, ncomponents=2);
+  styropor->AddElement(elH,fractionmass= 12.8*perCent);
+  styropor->AddElement(elC,fractionmass= 87.2*perCent);
+
+  //plastic scintillator
+  G4Material* plasticScint = new G4Material
+    (name="PlasticScintillator", density= 1.032*g/cm3, ncomponents=2);
+  plasticScint->AddElement(elC,natoms=9);
+  plasticScint->AddElement(elH,natoms=10);
+
+  // polyethylene 
+  G4Material* polyethylene = new G4Material
+    (name = "Polyethylene", density = 0.92*g/cm3, ncomponents = 2); 
+  polyethylene -> AddElement(elC, natoms = 2); 
+  polyethylene -> AddElement(elH, natoms = 4); 
+
+  // polypropylene 
+  G4Material* polypropylene = new G4Material
+    (name = "Polypropylene", density = 0.90*g/cm3, ncomponents = 2); 
+  polypropylene -> AddElement(elC, natoms = 3); 
+  polypropylene -> AddElement(elH, natoms = 6); 
+
+  // polyethylen terephthalat  (PET, Mylar)
+  G4Material* PET = new G4Material
+    (name = "PET", density = 1370 * kg/m3, ncomponents = 3); 
+  PET -> AddElement(elC, natoms = 10); 
+  PET -> AddElement(elH, natoms = 8); 
+  PET -> AddElement(elO, natoms = 4); 
+
+  // poly(4,4'-oxydiphenylene-pyromellitimide) (Kapton)
+  G4Material* kapton = new G4Material
+    (name = "kapton", density = 1530 * kg/m3, ncomponents = 4); 
+  kapton -> AddElement(elC, natoms = 20); 
+  kapton -> AddElement(elH, natoms = 9); 
+  kapton -> AddElement(elO, natoms = 2); 
+  kapton -> AddElement(elN, natoms = 1);
+
+  // epoxy resin (generic)
+  G4Material* epoxy = new G4Material
+    (name = "Epoxy", density = 1129 * kg/m3, ncomponents = 4); 
+  epoxy -> AddElement(elC, natoms = 41); 
+  epoxy -> AddElement(elH, natoms = 49); 
+  epoxy -> AddElement(elO, natoms = 7); 
+  epoxy -> AddElement(elN, natoms = 3);
+
+  // modified epoxy resin (generic)
+  G4Material* epoxy_mod = new G4Material
+    (name = "Epoxy_mod", density = 711 * kg/m3, ncomponents = 4); 
+  epoxy_mod -> AddElement(elC, natoms = 41); 
+  epoxy_mod -> AddElement(elH, natoms = 49); 
+  epoxy_mod -> AddElement(elO, natoms = 7); 
+  epoxy_mod -> AddElement(elN, natoms = 3);
+
+  // 2,5 - diphenyl oxazole (PPO)
+  G4Material* PPO = new G4Material
+    (name = "PPO", density = 1421 * kg/m3, ncomponents = 4); 
+  PPO -> AddElement(elC, natoms = 15); 
+  PPO -> AddElement(elH, natoms = 11); 
+  PPO -> AddElement(elO, natoms = 1); 
+  PPO -> AddElement(elN, natoms = 1);
+
+  // dimethyl benzene-1,2-dicarboxylate (Dimethyl phtalate, DMP)
+  G4Material* dmp = new G4Material
+    (name = "DMP", density = 1073 * kg/m3, ncomponents = 3); 
+  dmp->AddElement(elH, natoms = 10);
+  dmp->AddElement(elC, natoms = 10);
+  dmp->AddElement(elO, natoms = 4);
+
+  G4Material* makrolon = new G4Material
+    (name = "polycarbonate", density = 1200 * kg/m3, ncomponents = 3); 
+  makrolon->AddElement(elH,fractionmass= 5.5491*perCent);
+  makrolon->AddElement(elC,fractionmass= 75.5751*perCent);
+  makrolon->AddElement(elO,fractionmass= 18.8758*perCent);
+
+  // Polyamid-imide
+  G4Material* torlon = new G4Material
+    (name = "torlon", density = 1.420 * g/cm3, ncomponents = 4);
+  torlon->AddElement(elH , natoms=4 );
+  torlon->AddElement(elC , natoms=8 );
+  torlon->AddElement(elN , natoms=2 );
+  torlon->AddElement(elO , natoms=3 );
+
+  // Korrodin CU5 bolts (CU5 former CuNi60, Ni (1.0 - 1.6 %), Si (0.4 - 0.7 %), rest Cu; put apparent density) 
+  G4Material* CU5 = new G4Material
+    (name="CU5",density=3672*kg/m3,ncomponents=3);
+  CU5->AddElement(elSi,fractionmass= 0.55*perCent);
+  CU5->AddElement(elNi,fractionmass= 1.3*perCent);
+  CU5->AddElement(elCu,fractionmass= 98.15*perCent);
+  
+  // Sapphire disks for GeDSG 
+  G4Material* sapphire = new G4Material
+    (name="Sapphire",density=3972*kg/m3,ncomponents=2);
+  sapphire->AddElement(elAl , natoms=2 );
+  sapphire->AddElement(elO , natoms=3 );
+  
+  
+  //metallic beryllium 
+  G4Material* metalBe = new G4Material
+    (name="MetalBeryllium",density=1.848*g/cm3,ncomponents=1);
+  metalBe->AddElement(elBe,natoms=1);
+  
+  //carbon fibre 
+  G4Material* carbonf = new G4Material
+    (name="CarbonFibre",density=1.75*g/cm3,ncomponents=1);
+  carbonf->AddElement(elC,natoms=1);
+  
+  //metallic lithium 
+  G4Material* metalLi = new G4Material
+ //   (name="MetalLithium",density=0.535*g/cm3,ncomponents=1);
+  metalLi->AddElement(elLi,natoms=1);
+*/
+  //quartz
+  G4Material* quartz = new G4Material
+    (name="Quartz",density=2.2*g/cm3,ncomponents=2);
+  quartz->AddElement(elSi,1);
+  quartz->AddElement(elO,2);
+/*
+  // titanium
+  G4Material* metalTi = new G4Material(name = "MetalTitanium", density = 4.51*g/cm3, ncomponents = 1);
+  metalTi -> AddElement(elTi, natoms = 1);
+
+  // nickel
+  G4Material* metalNi = new G4Material(name = "MetalNickel", density = 8.800*g/cm3, ncomponents = 1);
+  metalNi -> AddElement(elNi, natoms = 1);
+
+  // gold 
+  G4Material* metalAu = new G4Material(name = "MetalGold", density = 19.320*g/cm3, ncomponents = 1);
+  metalAu -> AddElement(elAu, natoms = 1);
+
+  // modify density in order to have the equivalent of two 2x2cm gold foils, with 20 um thickness
+  G4Material* Gold_source_mat = new G4Material( "CapsGold", density=4.825*g/cm3, ncomponents = 1);
+  Gold_source_mat->AddElement(elAu,1.0);
+
+  // indium 
+  G4Material* metalIn = new G4Material(name = "MetalIndium", density = 7.31*g/cm3, ncomponents = 1);
+  metalIn -> AddElement(elIn, natoms = 1);
+
+  // silver 
+  G4Material* metalAg = new G4Material(name = "MetalSilver", density = 10.49*g/cm3, ncomponents = 1);
+  metalAg -> AddElement(elAg, natoms = 1);
+*/
+  //   PMT photocathode aluminium
+  G4Material* CathodeMetalAluminium = new G4Material
+      (name="CathodeMetalAluminium", density=2.7*g/cm3, ncomponents=1);
+  CathodeMetalAluminium->AddElement(elAl, 1);
+/*
+  // Brass
+  density = 8.5*g/cm3;
+  G4Material* Brass = new G4Material(name="Brass", density, ncomponents=3);
+  Brass -> AddElement(elCu, fractionmass=0.61);
+  Brass -> AddElement(elZn, fractionmass=0.37);
+  Brass -> AddElement(elPb, fractionmass=0.02);
+
+  // Proportional Gas
+  density = 0.001563*g/cm3;
+  G4Material* ProportionalGas = new G4Material(name="ProportionalGas", density,
+					       ncomponents=3);
+  ProportionalGas -> AddElement(elAr, fractionmass=0.90);
+  ProportionalGas -> AddElement(elC, fractionmass=0.0748694);
+  ProportionalGas -> AddElement(elH, fractionmass=0.0251306);
+  // composition corrected (original : C-> 0.02  H-> 0.08 )
+
+  // Nitrogen Gas
+  density = 0.0011467*g/cm3;
+  G4Material* N2Gas = new G4Material(name="NitrogenGas", density, 1);
+  N2Gas -> AddElement(elN, natoms=2);
+
+  // Germanium/Lithium mixture of 1 per cent assumed (in dead layer)
+  density = 5.323*g/cm3;
+  G4Material* GeLi = new G4Material(name="Germanium/Lithium", density, ncomponents=2);
+  GeLi -> AddElement(elGeNat, fractionmass=0.99);
+  GeLi -> AddElement(elLi, fractionmass=0.01);
+
+  // Acrylic
+  G4Material* Acrylic = new G4Material
+    (name="Acrylic", density= 1.15*g/cm3, ncomponents=3);
+  Acrylic->AddElement(elC,natoms=5);
+  Acrylic->AddElement(elH,natoms=8);
+  Acrylic->AddElement(elO,natoms=2);
+
+  // PolyVinylChlorid
+  G4Material* PVC = new G4Material
+    (name="PVC", density= 1.38*g/cm3, ncomponents=3);
+  PVC->AddElement(elC,natoms=2);
+  PVC->AddElement(elH,natoms=3);
+  PVC->AddElement(elCl,natoms=1);
+
+  // HD1000 UHMW Polyethylene
+  density = 0.93*g/cm3;
+  G4Material* HD1000 = new G4Material(name="HD1000", density, ncomponents=2);
+  HD1000 -> AddElement(elH, natoms=4);
+  HD1000 -> AddElement(elC, natoms=2);
+
+  // MONEL 400
+  G4Material* MONEL = new G4Material
+    (name="MONEL",density=8.83*g/cm3,ncomponents=5);
+  MONEL->AddElement(elNi,fractionmass= 0.64);
+  MONEL->AddElement(elCu,fractionmass= 0.31);
+  MONEL->AddElement(elMn,fractionmass= 0.02);
+  MONEL->AddElement(elFe,fractionmass= 0.025);
+  MONEL->AddElement(elSi,fractionmass= 0.005);
+
+  // Polyethylene
+  density = 0.945*g/cm3;
+  G4Material* PE = new G4Material(name="PE", density, ncomponents=2);
+  PE -> AddElement(elH, natoms=4);
+  PE -> AddElement(elC, natoms=2);
+
+  // Polystyrene
+  density = 1.05*g/cm3;
+  G4Material* PS = new G4Material(name="PS", density, ncomponents=2);
+  PS -> AddElement(elH, natoms=8);
+  PS -> AddElement(elC, natoms=8);
+
+  // ***Bronze*** mixture of 60% Cu and 40% Sn is assumed 
+  density = 8.8*g/cm3;
+  G4Material* Bronze = new G4Material(name="Bronze", density, ncomponents=2);
+  Bronze->AddElement(elCu, natoms=14);
+  Bronze->AddElement(elSn, natoms=5);
+
+  *** Germanium/Boron mixture of 1 per cent assumed (in dead layer *** 
+  density = 5.18*g/cm3;
+  G4Material* GeB = new G4Material(name="Germanium/Boron", density, ncomponents=2);
+  GeB -> AddElement(elGeNat, fractionmass=0.99);
+  GeB -> AddElement(elB, fractionmass=0.01);
+
+  // gaseous hydrogen
+  density=0.0899*mg/cm3;
+  G4Material *hydrogen = new G4Material(name="Hydrogen",density,ncomponents=1,
+                                    kStateGas,300.00*kelvin,1.0*atmosphere);
+  hydrogen->AddElement(elH,natoms=1);
+
+  //LNGS rock from Wulandari et al. Astrop Phys 22 (2004) 313
+  density = 2.71*g/cm3;
+  G4Material* lngsRock = new G4Material(name="LNGSRock",density,ncomponents=7);
+  lngsRock->AddElement(elC,fractionmass=11.88*perCent);
+  lngsRock->AddElement(elO,fractionmass=48.92*perCent);
+  lngsRock->AddElement(elMn,fractionmass=5.58*perCent);
+  lngsRock->AddElement(elAl,fractionmass=1.03*perCent);
+  lngsRock->AddElement(elSi,fractionmass=1.27*perCent);
+  lngsRock->AddElement(elK,fractionmass=1.03*perCent);
+  lngsRock->AddElement(elCa,fractionmass=30.29*perCent);
+*/  
+  //Legend Rock
+  G4Material* mat_Rock= new G4Material("Rock", 2.86 * g / cm3, 5);
+  G4double sum_minors = 0.22/1000000. + 0.33/1000000. + 0.96/100.;
+  mat_Rock->AddElement(elSi, 1./3.*(1-sum_minors));
+  mat_Rock->AddElement(elO, 2./3.*(1-sum_minors));
+  mat_Rock->AddElement(elUr, 0.22/1000000.);
+  mat_Rock->AddElement(elTh, 0.33/1000000.);
+  mat_Rock->AddElement(elK, 0.96/100.);
+
+  // Americium Oxide AmO2
+  // Does not work because 
+  // G4ParticleHPNames::GetName - data with Z>92 are not provided
+  //density = 11.68*g/cm3;
+  //G4Material* AmericiumOxide = new G4Material(name="AmericiumOxide",density,ncomponents=2);
+  //AmericiumOxide->AddElement(elAm,natoms=1);
+  //AmericiumOxide->  AddMaterial(matAm,natoms=1);
+  //AmericiumOxide->AddElement(elO,natoms=2);
+  
+  //Fill Gas
+  mat_NCold = new G4Material("NitrogenCold",0.001251*293/80.*g/cm3, 1, kStateGas, 80.0*kelvin, 1.0*bar);
+	mat_NCold->AddElement(elN,1);
+	mat_NLiq = new G4Material("NitrogenLiquid", 0.808*g/cm3, 1, kStateLiquid, 80.0*kelvin, 1.0*bar);
+	mat_NLiq->AddElement(elN,1);
+
+	mat_ArCold = new G4Material("ArgonCold",0.001784*293/87.*g/cm3, 1, kStateGas, 87.0*kelvin, 1.0*bar);
+	mat_ArCold->AddElement(elAr,1);
+	mat_ArLiq = new G4Material("ArgonLiquid", 1.3954*g/cm3, 1, kStateLiquid, 87.0*kelvin, 1.0*bar);
+	mat_ArLiq->AddElement(elAr,1);
+
+  ////////////////// Optical properties ///////////////////
+  /////////////////From Gerda /////////////////////////////
+  //PMT glass: Added by Neil
   const G4int num_entries = 24;
   G4double PMTGlassEnergy[num_entries] = {
             LambdaE/(115*nanometer), LambdaE /(160.8*nanometer), LambdaE /(170*nanometer), LambdaE /(182.3*nanometer), LambdaE /(200*nanometer), 
@@ -66,48 +643,30 @@
   fPMTGlassOptSurface = new G4OpticalSurface("LArInstrPMTGlassSurface",glisur,polished,dielectric_metal);
   fPMTGlassOptSurface->SetMaterialPropertiesTable(fPMTGlassOptTable);
   
-  fAl = new G4Material("Al",z=13.,a=26.98*g/mole,density=2.7*g/cm3);
-
-  G4Material* mat_Rock= new G4Material("Rock", 2.86 * g / cm3, 5);
-  G4double sum_minors = 0.22/1000000. + 0.33/1000000. + 0.96/100.;
-  mat_Rock->AddMaterial(mat_Silicon, 1./3.*(1-sum_minors));
-  mat_Rock->AddMaterial(mat_Oxygen, 2./3.*(1-sum_minors));
-  mat_Rock->AddMaterial(mat_Uranium, 0.22/1000000.);
-  mat_Rock->AddMaterial(mat_Thorium, 0.33/1000000.);
-  mat_Rock->AddMaterial(mat_Potassium, 0.96/100.);
-
-
+  
+  
+  /*//Defined above, keeping just in case 
 	G4Isotope* iso_Ge70 = new G4Isotope("Germanium70", 32, 70, 69.9243 * g / mole);
   G4Isotope* iso_Ge72 = new G4Isotope("Germanium72", 32, 72, 71.9221 * g / mole);
   G4Isotope* iso_Ge73 = new G4Isotope("Germanium73", 32, 73, 72.9235 * g / mole);
   G4Isotope* iso_Ge74 = new G4Isotope("Germanium74", 32, 74, 73.9212 * g / mole);
   G4Isotope* iso_Ge76 = new G4Isotope("Germanium76", 32, 76, 75.9214 * g / mole);
 
-  G4Element* ele_Ge = new G4Element("Germanium", "Ge", 2);
+//  G4Element* ele_Ge = new G4Element("Germanium", "Ge", 2);
   ele_Ge->AddIsotope(iso_Ge74, 0.14);
 	ele_Ge->AddIsotope(iso_Ge76, 0.86);
 
   G4Material* mat_GeEnr = new G4Material("GermaniumEnriched", 5.323*g/cm3, 1);
   mat_GeEnr->AddElement(ele_Ge, 1);
+  */
 
 
 
-
-	mat_NCold = new G4Material("NitrogenCold",0.001251*293/80.*g/cm3, 1, kStateGas, 80.0*kelvin, 1.0*bar);
-	mat_NCold->AddMaterial(mat_N,1);
-	mat_NLiq = new G4Material("NitrogenLiquid", 0.808*g/cm3, 1, kStateLiquid, 80.0*kelvin, 1.0*bar);
-	mat_NLiq->AddMaterial(mat_N,1);
-
-	mat_ArCold = new G4Material("ArgonCold",0.001784*293/87.*g/cm3, 1, kStateGas, 87.0*kelvin, 1.0*bar);
-	mat_ArCold->AddMaterial(mat_Ar,1);
-	mat_ArLiq = new G4Material("ArgonLiquid", 1.3954*g/cm3, 1, kStateLiquid, 87.0*kelvin, 1.0*bar);
-	mat_ArLiq->AddMaterial(mat_Ar,1);
 
 
 
 	////////////////////////////////////////////////////////////////////////////////////////
-	G4Material* mat_Detector = mat_GeEnr;
-	//G4Material* mat_FillGas;//should be defined in header
+//	G4Material* mat_Detector = enrGe;
 
 	//Vacuum ArgonLiquid ArgonGas NitrogenLiquid NitrogenGas
 	if (innerVessel_FillMaterial.contains("NitrogenGas")) mat_fillGas	= mat_NCold;
@@ -116,7 +675,6 @@
 	else if (innerVessel_FillMaterial.contains("ArgonLiquid")) mat_fillGas	= mat_ArLiq;
 	else mat_fillGas = mat_vacuum;
 
-
 	G4cout << "----------------------------" << G4endl;
 	G4cout << "Material in inner vessel is " << mat_fillGas->GetName() << G4endl;
 	G4cout << "Temperature: "                << mat_fillGas->GetTemperature() << G4endl;
@@ -124,27 +682,4 @@
 	G4cout << "Density: "                    << mat_fillGas->GetDensity() / (g/cm3) << " g/cm3 " << G4endl;
 	G4cout << "----------------------------" << G4endl;
 
-  //Polystyrene
-  
-  fPstyrene = new G4Material("Polystyrene", /*density=*/ 1.03*g/cm3, 2);
-  fPstyrene->AddElement(fC, 8);
-  fPstyrene->AddElement(fH, 8);
-
-  G4double wls_Energy[] = {2.00*eV,2.87*eV,2.90*eV,3.47*eV};
-  const G4int wlsnum = sizeof(wls_Energy)/sizeof(G4double);
- 
-  G4double rIndexPstyrene[]={ 1.5, 1.5, 1.5, 1.5};
-  assert(sizeof(rIndexPstyrene) == sizeof(wls_Energy));
-  G4double absorption1[]={2.*cm, 2.*cm, 2.*cm, 2.*cm};
-  assert(sizeof(absorption1) == sizeof(wls_Energy));
-  G4double scintilFast[]={0.00, 0.00, 1.00, 1.00};
-  assert(sizeof(scintilFast) == sizeof(wls_Energy));
-  fMPTPStyrene = new G4MaterialPropertiesTable();
-  fMPTPStyrene->AddProperty("RINDEX",wls_Energy,rIndexPstyrene,wlsnum);
-  fMPTPStyrene->AddProperty("ABSLENGTH",wls_Energy,absorption1,wlsnum);
-  fMPTPStyrene->AddProperty("FASTCOMPONENT",wls_Energy, scintilFast,wlsnum);
-  fMPTPStyrene->AddConstProperty("SCINTILLATIONYIELD",10./keV);
-  fMPTPStyrene->AddConstProperty("RESOLUTIONSCALE",1.0);
-  fMPTPStyrene->AddConstProperty("FASTTIMECONSTANT", 10.*ns);
-  fPstyrene->SetMaterialPropertiesTable(fMPTPStyrene);
 

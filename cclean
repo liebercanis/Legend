@@ -1,0 +1,5 @@
+#!/bin/bash
+echo " cleaning up cmake "
+rm CMakeCache.txt 
+rm -rf CMakeFiles 
+echo " start again with cmake ."
